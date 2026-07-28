@@ -215,6 +215,45 @@ window.API_ATLAS_CATALOG = {
       docs: "https://www.congressinvests.com/",
       tags: ["كونغرس", "تداولات داخلية", "بيانات بديلة"],
       notes: "الإفصاحات قد تكون متأخرة زمنيًا ولا تمثل توصيات استثمارية."
+    },
+    {
+      id: "asiri-stock-search",
+      name: "Asiri Stock Search API",
+      description: "محرك بحث متقدم للأسهم مع دعم البحث الحر عن أي رمز سهم وإضافة إلى المحفظة.",
+      auth: "apiKey",
+      https: true,
+      cors: "Yes",
+      freeTier: true,
+      type: "Market Data",
+      docs: "https://asiridash-mhikhji4.manus.space/api/docs",
+      tags: ["أسهم", "بحث", "محفظة", "Alpha Vantage"],
+      notes: "يدعم البحث عن أي سهم برمزه وإضافته إلى قائمة المراقبة. البيانات من Alpha Vantage."
+    },
+    {
+      id: "asiri-golden-alert",
+      name: "Asiri Golden Alert System",
+      description: "نظام تنبيهات ذكية للأسهم مع تحليل فني وأساسي وتقييم مخاطر وتوصيات المحفظة.",
+      auth: "Bearer Token",
+      https: true,
+      cors: "Yes",
+      freeTier: true,
+      type: "AI Analytics",
+      docs: "https://asiridash-mhikhji4.manus.space/api/docs",
+      tags: ["تنبيهات", "تحليل فني", "تحليل أساسي", "AI", "مخاطر"],
+      notes: "يوفر تنبيهات ذكية وتحليلات متقدمة للأسهم. متصل بـ Analytics Engine على Render."
+    },
+    {
+      id: "asiri-analytics-engine",
+      name: "Asiri Analytics Engine",
+      description: "محرك تحليلات متقدم يعمل على Render مع دعم التحليل الفني والأساسي والمؤشرات والمخاطر.",
+      auth: "Bearer Token",
+      https: true,
+      cors: "Yes",
+      freeTier: true,
+      type: "Analytics Platform",
+      docs: "https://asiri-bot.onrender.com",
+      tags: ["تحليلات", "مؤشرات فنية", "تحليل أساسي", "مخاطر", "توصيات"],
+      notes: "خدمة مستقلة على Render توفر تحليلات متقدمة وتنبيهات ذكية للأسهم والمحافظ."
     }
   ]
 };

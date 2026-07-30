@@ -1,0 +1,111 @@
+name: Temporary Encrypted Merge Drive CVs
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade 'gdown>=6.0.0' pypdf
+
+      - name: Download and merge all CV PDFs
+        shell: bash
+        run: |
+          cat > /tmp/merge_cvs.py <<'PY'
+          from __future__ import annotations
+
+          import re
+          from pathlib import Path
+
+          import gdown
+          from pypdf import PdfReader, PdfWriter
+
+          FOLDER_URL = "https://drive.google.com/drive/folders/1oCsuBUGmh6i4uG0aoZiBQqFyb1HDJSeP?usp=sharing"
+          output_dir = Path("downloaded_cvs")
+          output_dir.mkdir(parents=True, exist_ok=True)
+
+          downloaded = gdown.download_folder(
+              url=FOLDER_URL,
+              output=str(output_dir),
+              quiet=False,
+              use_cookies=False,
+          )
+          if not downloaded:
+              raise RuntimeError("Google Drive folder download returned no files")
+
+          def natural_key(path: Path):
+              return [int(x) if x.isdigit() else x.lower() for x in re.split(r"(\d+)", path.name)]
+
+          pdfs = sorted(output_dir.rglob("*.pdf"), key=natural_key)
+          print(f"PDF_COUNT={len(pdfs)}")
+          if len(pdfs) != 362:
+              raise RuntimeError(f"Incomplete folder download: expected 362 PDFs, got {len(pdfs)}")
+
+          writer = PdfWriter()
+          total_pages = 0
+          for index, pdf in enumerate(pdfs, start=1):
+              reader = PdfReader(str(pdf), strict=False)
+              for page in reader.pages:
+                  writer.add_page(page)
+              total_pages += len(reader.pages)
+              print(f"[{index}/{len(pdfs)}] {pdf.name}: {len(reader.pages)} pages")
+
+          out = Path("All_CVs_Merged_2026-07-30.pdf")
+          with out.open("wb") as handle:
+              writer.write(handle)
+
+          check = PdfReader(str(out), strict=False)
+          if len(check.pages) != total_pages:
+              raise RuntimeError(
+                  f"Merged page count mismatch: expected {total_pages}, got {len(check.pages)}"
+              )
+          print(f"MERGED_FILE={out}")
+          print(f"TOTAL_PAGES={total_pages}")
+          print(f"MERGED_SIZE={out.stat().st_size}")
+          PY
+          python /tmp/merge_cvs.py
+
+      - name: Encrypt merged PDF
+        shell: bash
+        run: |
+          echo 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQm9qQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FZOEFNSUlCaWdLQ0FZRUFwTWwzRXFCUEV4YXVCTisvNkdTawp3MmRNRWZkeEhZWWtNbVc3Mkt6MlV2RklBSmprMjdqNHVtajNndk9CN2RkMCtlN3ZJcW9QM043MXhDY3hqcU16ClcvVWpjRmxmRzJCSUdUaXptUlBVcS8rWCtWaGl5aDErWnhhRnErS0VRZnNuTW1icjMxV25RR2taMTZJbEs5dHQKMytjN3FmSVNqcUNBZ2V1eHkrTC93dnhWRVRVZXBIZEZYeHloY2J4RUsyc1BDZW9KQ2JOV0orNzZaUlhKaWY1ago2OVV6aFlpL2p6WWtzTjBBRUl4VlJVU1hCcHNmR1pXci9Ja1ZKcTU4K0JoL1ZodC9FZmxsUWhBNDR3TjhyWU8zCnlvQmJXUkY0V0FEZWRXcm1TM1pNbk1PbEIwNU9yWXcrYU41UkJqOEg0N3VEYUdGUGcxeUdIZTJjUlAxOXVRNHkKTUx1YjJQZ0FiVTRYQVBmKzgzS2w3c3NKNlo5VWlGRUFiM3gyYVRQWVJQeml2NjZ5WEEyMmVoYzdYazlpcXBCNgpOa212SjdzdVAyVzIyTWluZVcwRWJaWkw5a3FqQmJzUkFaZFBpcXVFa1RlRkJVeTl0ZitvU1hzTlhuSkRNWGk4CmJ2YmdFcFFLWW9UZ0UzQU5SZlh3Z1gwbGhQVjhZS2lIRmZQSzJSRmkySzRqQWdNQkFBRT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==' | base64 -d > public.pem
+          openssl rand 32 > key.bin
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+            -in All_CVs_Merged_2026-07-30.pdf \
+            -out All_CVs_Merged_2026-07-30.pdf.enc \
+            -pass file:key.bin
+          openssl pkeyutl -encrypt -pubin -inkey public.pem \
+            -in key.bin -out key.enc \
+            -pkeyopt rsa_padding_mode:oaep \
+            -pkeyopt rsa_oaep_md:sha256
+          sha256sum All_CVs_Merged_2026-07-30.pdf > merged.sha256
+          rm -f All_CVs_Merged_2026-07-30.pdf key.bin public.pem
+          rm -rf downloaded_cvs
+
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-all-cvs-2026-07-30
+          path: |
+            All_CVs_Merged_2026-07-30.pdf.enc
+            key.enc
+            merged.sha256
+          if-no-files-found: error
+          retention-days: 1

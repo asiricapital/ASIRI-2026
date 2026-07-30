@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  merge:
+  collect:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -23,89 +23,166 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: python -m pip install --upgrade 'gdown>=6.0.0' pypdf
+        run: python -m pip install --upgrade 'gdown>=6.0.0' requests
 
-      - name: Download and merge all CV PDFs
+      - name: List and download CV PDFs with retries
         shell: bash
         run: |
-          cat > /tmp/merge_cvs.py <<'PY'
+          cat > /tmp/collect_cvs.py <<'PY'
           from __future__ import annotations
 
+          import json
+          import random
           import re
+          import subprocess
+          import time
           from pathlib import Path
+          from urllib.parse import parse_qs, urlparse
 
           import gdown
-          from pypdf import PdfReader, PdfWriter
+          import requests
 
           FOLDER_URL = "https://drive.google.com/drive/folders/1oCsuBUGmh6i4uG0aoZiBQqFyb1HDJSeP?usp=sharing"
+          EXPECTED = 362
           output_dir = Path("downloaded_cvs")
           output_dir.mkdir(parents=True, exist_ok=True)
 
-          downloaded = gdown.download_folder(
-              url=FOLDER_URL,
-              output=str(output_dir),
-              quiet=False,
-              use_cookies=False,
+          listed = subprocess.run(
+              ["gdown", FOLDER_URL, "--folder", "--json", "--no-cookies"],
+              check=True,
+              capture_output=True,
+              text=True,
           )
-          if not downloaded:
-              raise RuntimeError("Google Drive folder download returned no files")
+          entries = json.loads(listed.stdout)
 
-          def natural_key(path: Path):
-              return [int(x) if x.isdigit() else x.lower() for x in re.split(r"(\d+)", path.name)]
+          def natural_key(value: str):
+              return [int(x) if x.isdigit() else x.lower() for x in re.split(r"(\d+)", value)]
 
-          pdfs = sorted(output_dir.rglob("*.pdf"), key=natural_key)
-          print(f"PDF_COUNT={len(pdfs)}")
-          if len(pdfs) != 362:
-              raise RuntimeError(f"Incomplete folder download: expected 362 PDFs, got {len(pdfs)}")
+          entries = sorted(entries, key=lambda item: natural_key(item["path"]))
+          print(f"LISTED_COUNT={len(entries)}")
+          if len(entries) != EXPECTED:
+              raise RuntimeError(f"Expected {EXPECTED} folder entries, found {len(entries)}")
 
-          writer = PdfWriter()
-          total_pages = 0
-          for index, pdf in enumerate(pdfs, start=1):
-              reader = PdfReader(str(pdf), strict=False)
-              for page in reader.pages:
-                  writer.add_page(page)
-              total_pages += len(reader.pages)
-              print(f"[{index}/{len(pdfs)}] {pdf.name}: {len(reader.pages)} pages")
+          session = requests.Session()
+          session.headers.update({
+              "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36"
+          })
 
-          out = Path("All_CVs_Merged_2026-07-30.pdf")
-          with out.open("wb") as handle:
-              writer.write(handle)
+          def file_id_from_url(url: str) -> str:
+              parsed = urlparse(url)
+              query_id = parse_qs(parsed.query).get("id")
+              if query_id:
+                  return query_id[0]
+              match = re.search(r"/d/([^/]+)", parsed.path)
+              if match:
+                  return match.group(1)
+              return url
 
-          check = PdfReader(str(out), strict=False)
-          if len(check.pages) != total_pages:
-              raise RuntimeError(
-                  f"Merged page count mismatch: expected {total_pages}, got {len(check.pages)}"
-              )
-          print(f"MERGED_FILE={out}")
-          print(f"TOTAL_PAGES={total_pages}")
-          print(f"MERGED_SIZE={out.stat().st_size}")
+          def valid_pdf(path: Path) -> bool:
+              try:
+                  return path.exists() and path.stat().st_size > 1000 and path.read_bytes()[:5] == b"%PDF-"
+              except OSError:
+                  return False
+
+          def direct_download(file_id: str, destination: Path) -> bool:
+              urls = [
+                  f"https://drive.usercontent.google.com/download?id={file_id}&export=download&confirm=t",
+                  f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t",
+              ]
+              for url in urls:
+                  try:
+                      response = session.get(url, timeout=60, allow_redirects=True)
+                      if response.status_code == 200 and response.content[:5] == b"%PDF-":
+                          destination.write_bytes(response.content)
+                          return valid_pdf(destination)
+                  except requests.RequestException:
+                      pass
+              return False
+
+          manifest = []
+          failed = []
+          for index, entry in enumerate(entries, start=1):
+              source_url = entry["url"]
+              relative_path = Path(entry["path"])
+              destination = output_dir / relative_path.name
+              file_id = file_id_from_url(source_url)
+              ok = False
+              error = None
+
+              for attempt in range(1, 6):
+                  try:
+                      if destination.exists():
+                          destination.unlink()
+                      gdown.download(
+                          url=source_url,
+                          output=str(destination),
+                          quiet=True,
+                          use_cookies=False,
+                      )
+                      if valid_pdf(destination):
+                          ok = True
+                          break
+                  except Exception as exc:
+                      error = f"{type(exc).__name__}: {exc}"
+
+                  if direct_download(file_id, destination):
+                      ok = True
+                      break
+
+                  delay = min(45, attempt * 8) + random.random() * 3
+                  print(f"RETRY {attempt}/5 for {relative_path.name} after {delay:.1f}s")
+                  time.sleep(delay)
+
+              record = {
+                  "index": index,
+                  "id": file_id,
+                  "url": source_url,
+                  "path": relative_path.name,
+                  "downloaded": ok,
+                  "error": error,
+              }
+              manifest.append(record)
+              if ok:
+                  print(f"OK [{index}/{len(entries)}] {relative_path.name}")
+              else:
+                  failed.append(record)
+                  print(f"FAILED [{index}/{len(entries)}] {relative_path.name} id={file_id}")
+
+              time.sleep(0.35)
+
+          Path("manifest.json").write_text(
+              json.dumps({"expected": EXPECTED, "downloaded": EXPECTED - len(failed), "failed": failed, "files": manifest}, ensure_ascii=False, indent=2),
+              encoding="utf-8",
+          )
+          print(f"DOWNLOADED_COUNT={EXPECTED - len(failed)}")
+          print(f"FAILED_COUNT={len(failed)}")
           PY
-          python /tmp/merge_cvs.py
+          python /tmp/collect_cvs.py
+          tar -czf collected_cvs.tar.gz downloaded_cvs manifest.json
 
-      - name: Encrypt merged PDF
+      - name: Encrypt collected CV archive
         shell: bash
         run: |
           echo 'LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQm9qQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FZOEFNSUlCaWdLQ0FZRUFwTWwzRXFCUEV4YXVCTisvNkdTawp3MmRNRWZkeEhZWWtNbVc3Mkt6MlV2RklBSmprMjdqNHVtajNndk9CN2RkMCtlN3ZJcW9QM043MXhDY3hqcU16ClcvVWpjRmxmRzJCSUdUaXptUlBVcS8rWCtWaGl5aDErWnhhRnErS0VRZnNuTW1icjMxV25RR2taMTZJbEs5dHQKMytjN3FmSVNqcUNBZ2V1eHkrTC93dnhWRVRVZXBIZEZYeHloY2J4RUsyc1BDZW9KQ2JOV0orNzZaUlhKaWY1ago2OVV6aFlpL2p6WWtzTjBBRUl4VlJVU1hCcHNmR1pXci9Ja1ZKcTU4K0JoL1ZodC9FZmxsUWhBNDR3TjhyWU8zCnlvQmJXUkY0V0FEZWRXcm1TM1pNbk1PbEIwNU9yWXcrYU41UkJqOEg0N3VEYUdGUGcxeUdIZTJjUlAxOXVRNHkKTUx1YjJQZ0FiVTRYQVBmKzgzS2w3c3NKNlo5VWlGRUFiM3gyYVRQWVJQeml2NjZ5WEEyMmVoYzdYazlpcXBCNgpOa212SjdzdVAyVzIyTWluZVcwRWJaWkw5a3FqQmJzUkFaZFBpcXVFa1RlRkJVeTl0ZitvU1hzTlhuSkRNWGk4CmJ2YmdFcFFLWW9UZ0UzQU5SZlh3Z1gwbGhQVjhZS2lIRmZQSzJSRmkySzRqQWdNQkFBRT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==' | base64 -d > public.pem
           openssl rand 32 > key.bin
           openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
-            -in All_CVs_Merged_2026-07-30.pdf \
-            -out All_CVs_Merged_2026-07-30.pdf.enc \
+            -in collected_cvs.tar.gz \
+            -out collected_cvs.tar.gz.enc \
             -pass file:key.bin
           openssl pkeyutl -encrypt -pubin -inkey public.pem \
             -in key.bin -out key.enc \
             -pkeyopt rsa_padding_mode:oaep \
             -pkeyopt rsa_oaep_md:sha256
-          sha256sum All_CVs_Merged_2026-07-30.pdf > merged.sha256
-          rm -f All_CVs_Merged_2026-07-30.pdf key.bin public.pem
-          rm -rf downloaded_cvs
+          sha256sum collected_cvs.tar.gz > archive.sha256
+          rm -rf downloaded_cvs manifest.json collected_cvs.tar.gz key.bin public.pem
 
       - name: Upload encrypted artifact
         uses: actions/upload-artifact@v4
         with:
-          name: encrypted-all-cvs-2026-07-30
+          name: encrypted-collected-cvs-2026-07-30
           path: |
-            All_CVs_Merged_2026-07-30.pdf.enc
+            collected_cvs.tar.gz.enc
             key.enc
-            merged.sha256
+            archive.sha256
           if-no-files-found: error
           retention-days: 1

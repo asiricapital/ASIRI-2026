@@ -1,0 +1,12 @@
+{
+  "name": "Asiri Music",
+  "short_name": "Asiri Music",
+  "description": "واجهة شخصية مرتبطة بـ Spotify",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "lang": "ar",
+  "dir": "rtl"
+}

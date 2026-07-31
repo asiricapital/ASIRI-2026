@@ -1,4 +1,4 @@
-const CLIENT_ID = '3163isshqg6ym3o7xracjn4js7ce';
+const CLIENT_ID = '3ac122f971744e508bfd33ad0637d421';
 const SCOPES = [
   'user-read-private',
   'user-read-email',

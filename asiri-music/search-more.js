@@ -2,15 +2,18 @@ const $ = selector => document.querySelector(selector);
 const results = $('#results');
 const resultCount = $('#resultCount');
 const searchInput = $('#searchInput');
-const loadMoreButton = $('#loadMoreButton');
 const searchLimitNote = $('#searchLimitNote');
 const trackTemplate = $('#trackTemplate');
+const sentinel = $('#searchSentinel');
 
-const PAGE_SIZE = 10;
-const MAX_RESULTS = 50;
+const PAGE_SIZE = 20;
 let activeQuery = '';
+let nextOffset = 0;
 let loading = false;
 let hasMore = false;
+let searchGeneration = 0;
+let seenTrackIds = new Set();
+let lastObservedCount = 0;
 
 async function refreshToken() {
   const refreshToken = localStorage.getItem('spotify_refresh_token');
@@ -103,8 +106,7 @@ async function playTrack(track, button) {
 function createCard(track) {
   const node = trackTemplate.content.cloneNode(true);
   const favoriteButton = node.querySelector('.favorite-track');
-  const savedFavorites = favorites();
-  const active = savedFavorites.some(item => item.id === track.id);
+  const active = favorites().some(item => item.id === track.id);
   node.querySelector('.track-cover').src = track.album?.images?.[0]?.url || '';
   node.querySelector('.track-name').textContent = track.name || 'بدون اسم';
   node.querySelector('.track-artist').textContent = track.artists?.map(item => item.name).join('، ') || '';
@@ -129,63 +131,100 @@ function createCard(track) {
   return node;
 }
 
-function syncControls() {
+function setNote(text = '', state = '') {
+  if (!searchLimitNote) return;
+  searchLimitNote.textContent = text;
+  searchLimitNote.dataset.state = state;
+  searchLimitNote.classList.toggle('hidden', !text);
+}
+
+function syncCount() {
   const count = results?.children.length || 0;
-  resultCount.textContent = count ? `${count} نتيجة` : '';
-  const reachedLimit = count >= MAX_RESULTS;
-  loadMoreButton.classList.toggle('hidden', !activeQuery || !hasMore || reachedLimit);
-  searchLimitNote.classList.toggle('hidden', !reachedLimit);
-  searchLimitNote.textContent = reachedLimit ? 'تم عرض أول 50 نتيجة.' : '';
+  if (resultCount) resultCount.textContent = count ? `${count} نتيجة` : '';
+}
+
+function captureInitialResults(query) {
+  activeQuery = query;
+  seenTrackIds = new Set();
+  results.querySelectorAll('.open-spotify').forEach(link => {
+    const match = link.href.match(/track\/([^?/#]+)/);
+    if (match) seenTrackIds.add(match[1]);
+  });
+  nextOffset = Math.max(results.children.length, 10);
+  hasMore = results.children.length > 0;
+  lastObservedCount = results.children.length;
+  searchGeneration += 1;
+  setNote('مرّر للأسفل لتحميل نتائج إضافية تلقائيًا.', 'ready');
+  syncCount();
 }
 
 async function loadMore() {
-  if (loading || !activeQuery) return;
+  if (loading || !hasMore || !activeQuery || !results) return;
+  const generation = searchGeneration;
   loading = true;
-  loadMoreButton.disabled = true;
-  loadMoreButton.textContent = 'جارٍ تحميل نتائج إضافية...';
+  setNote('جارٍ تحميل نتائج إضافية…', 'loading');
   try {
-    const offset = results.children.length;
-    const params = new URLSearchParams({q: activeQuery, type: 'track', limit: String(PAGE_SIZE), offset: String(offset)});
-    const data = await api(`/search?${params}`);
-    const items = data.tracks?.items || [];
-    const existing = new Set([...results.querySelectorAll('.open-spotify')].map(link => link.href));
-    items.forEach(track => {
-      const url = track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`;
-      if (!existing.has(url)) results.appendChild(createCard(track));
+    const params = new URLSearchParams({
+      q: activeQuery,
+      type: 'track',
+      limit: String(PAGE_SIZE),
+      offset: String(nextOffset)
     });
-    hasMore = Boolean(data.tracks?.next) && items.length > 0;
-  } catch {
-    searchLimitNote.classList.remove('hidden');
-    searchLimitNote.textContent = 'تعذر تحميل المزيد الآن. حاول مرة أخرى.';
+    const data = await api(`/search?${params}`);
+    if (generation !== searchGeneration) return;
+    const page = data.tracks;
+    const items = page?.items || [];
+    let appended = 0;
+    items.forEach(track => {
+      if (!track?.id || seenTrackIds.has(track.id)) return;
+      seenTrackIds.add(track.id);
+      results.appendChild(createCard(track));
+      appended += 1;
+    });
+    nextOffset += items.length;
+    hasMore = Boolean(page?.next) && items.length > 0;
+    syncCount();
+    if (hasMore) setNote(appended ? 'استمر بالنزول لعرض المزيد.' : 'جارٍ تجاوز النتائج المكررة…', 'ready');
+    else setNote('تم الوصول إلى نهاية نتائج Spotify لهذا البحث.', 'complete');
+  } catch (error) {
+    console.error(error);
+    setNote('تعذر تحميل المزيد الآن. حرّك الصفحة قليلًا للمحاولة مجددًا.', 'error');
   } finally {
     loading = false;
-    loadMoreButton.disabled = false;
-    loadMoreButton.textContent = 'عرض 10 نتائج إضافية';
-    syncControls();
   }
 }
 
-loadMoreButton?.addEventListener('click', loadMore);
+const sentinelObserver = new IntersectionObserver(entries => {
+  if (entries.some(entry => entry.isIntersecting)) loadMore();
+}, {root: null, rootMargin: '700px 0px', threshold: 0.01});
+if (sentinel) sentinelObserver.observe(sentinel);
 
-const observer = new MutationObserver(() => {
+const resultsObserver = new MutationObserver(() => {
   const query = searchInput?.value.trim() || '';
-  if (results.children.length > 0 && query) {
-    if (query !== activeQuery) {
+  const count = results.children.length;
+
+  if (!query || count === 0) {
+    if (count === 0) {
       activeQuery = query;
-      hasMore = results.children.length >= PAGE_SIZE;
+      hasMore = false;
+      nextOffset = 0;
+      seenTrackIds.clear();
+      lastObservedCount = 0;
+      setNote('');
+      syncCount();
     }
-    syncControls();
-  } else {
-    activeQuery = query;
-    hasMore = false;
-    syncControls();
+    return;
+  }
+
+  const looksLikeFreshSearch = query !== activeQuery || count < lastObservedCount || (lastObservedCount === 0 && count > 0);
+  if (looksLikeFreshSearch) captureInitialResults(query);
+  else {
+    lastObservedCount = count;
+    syncCount();
   }
 });
 
-if (results) observer.observe(results, {childList: true});
+if (results) resultsObserver.observe(results, {childList: true});
 searchInput?.addEventListener('input', () => {
-  if (searchInput.value.trim() !== activeQuery) {
-    loadMoreButton.classList.add('hidden');
-    searchLimitNote.classList.add('hidden');
-  }
+  if (searchInput.value.trim() !== activeQuery) setNote('');
 });

@@ -18,6 +18,25 @@
 
     <section id="homeView" class="view active">
       <section class="welcome-card"><div><p class="eyebrow">لوحتك اليومية</p><h2 id="welcomeTitle">مرحبًا أحمد</h2><p class="muted">وصول سريع إلى موسيقاك وقوائمك المفضلة.</p></div><button class="round-action" data-open-search>⌕</button></section>
+
+      <section class="ai-dj-card">
+        <div class="ai-dj-heading"><div><p class="eyebrow">Asiri AI DJ</p><h2>قل لي ماذا تريد أن تسمع</h2></div><span class="ai-badge">BETA</span></div>
+        <form id="aiDjForm" class="ai-dj-form">
+          <textarea id="aiDjInput" rows="2" placeholder="مثال: شغّل لي جلسة قهوة خليجية هادئة"></textarea>
+          <button id="aiDjButton" type="submit">✨ أنشئ الجلسة</button>
+        </form>
+        <div class="ai-dj-suggestions">
+          <button data-dj-prompt="شغل لي جلسة قهوة خليجية هادئة">☕ جلسة قهوة</button>
+          <button data-dj-prompt="أبغى أغاني عربية حماسية للسيارة">🚗 طريق وحماس</button>
+          <button data-dj-prompt="شغل لي طرب محمد عبده وعبادي الجوهر">🎻 طرب أصيل</button>
+          <button data-dj-prompt="أريد موسيقى هادئة للاسترخاء قبل النوم">🌙 استرخاء</button>
+        </div>
+        <div id="aiDjResponse" class="ai-dj-response hidden">
+          <div class="ai-dj-avatar">AI</div>
+          <div><strong id="aiDjTitle">تم تجهيز الجلسة</strong><p id="aiDjMessage"></p></div>
+        </div>
+      </section>
+
       <section class="stats-grid"><article class="stat-card"><span>قوائم Spotify</span><strong id="playlistStat">—</strong></article><article class="stat-card"><span>عمليات البحث</span><strong id="searchStat">0</strong></article><article class="stat-card"><span>مفضلة Asiri</span><strong id="favoriteStat">0</strong></article></section>
       <section><div class="section-heading"><h2>اختيار سريع</h2></div><div class="quick-grid"><button class="quick-card" data-query="محمد عبده"><span>🎻</span><strong>محمد عبده</strong><small>الطرب الأصيل</small></button><button class="quick-card" data-query="أغاني هادئة عربية"><span>🌙</span><strong>هدوء المساء</strong><small>مزاج هادئ</small></button><button class="quick-card" data-query="أغاني عربية للسيارة"><span>🚗</span><strong>طريق وسفر</strong><small>للقيادة</small></button><button class="quick-card" data-query="كلاسيكيات خليجية"><span>☕</span><strong>جلسة قهوة</strong><small>كلاسيكيات</small></button></div></section>
       <section><div class="section-heading"><h2>آخر عمليات البحث</h2><button id="clearHistory" class="text-button">مسح</button></div><div id="recentSearches" class="chips"><span class="muted">لا يوجد سجل بعد.</span></div></section>
@@ -52,5 +71,6 @@
 
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
   <script type="module" src="app.js"></script>
+  <script type="module" src="dj.js"></script>
 </body>
 </html>

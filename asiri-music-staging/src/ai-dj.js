@@ -1,0 +1,23 @@
+const $=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const state={tracks:[],busy:false,prompt:''};
+
+function getBridge(){return window.AsiriMusicBridge}
+function waitForBridge(){return new Promise(resolve=>{if(getBridge())return resolve(getBridge());const done=()=>{window.removeEventListener('asiri:bridge-ready',done);resolve(getBridge())};window.addEventListener('asiri:bridge-ready',done)})}
+function normalizePrompt(prompt){return prompt.trim().replace(/\s+/g,' ')}
+function buildQueries(prompt){const q=normalizePrompt(prompt);const lower=q.toLowerCase();const queries=[q];
+  if(/قهوة|هدوء|هادئ|مساء/.test(lower))queries.push('طرب خليجي هادئ','أغاني خليجية هادئة');
+  if(/سفر|طريق|سيارة|رحلة/.test(lower))queries.push('أغاني سفر خليجية','أغاني طريق عربية');
+  if(/حماس|نادي|رياضة/.test(lower))queries.push('أغاني خليجية حماسية','أغاني عربية حماسية');
+  if(/قديم|زمن جميل|كلاسيك/.test(lower))queries.push('كلاسيكيات خليجية','طرب سعودي قديم');
+  if(/محمد عبده/.test(q))queries.push('محمد عبده طرب','محمد عبده جلسات');
+  if(/طلال مداح/.test(q))queries.push('طلال مداح قديم','طلال مداح جلسات');
+  if(queries.length===1)queries.push(`${q} خليجي`,`${q} عربي`);
+  return [...new Set(queries)].slice(0,4)
+}
+function scoreTrack(track,prompt,taste){let score=track.popularity||0;const artists=(track.artists||[]).map(a=>a.name);for(const name of artists){score+=(taste?.artistScores?.[name]||0)*8}const text=`${track.name} ${artists.join(' ')}`.toLowerCase();for(const word of prompt.toLowerCase().split(/\s+/)){if(word.length>2&&text.includes(word))score+=12}if(taste?.dislikedTrackIds?.includes?.(track.id))score-=1000;return score}
+function renderPreview(){const wrap=$('#aiDjPreview'),count=$('#aiDjCount');wrap.innerHTML='';count.textContent=state.tracks.length?`${state.tracks.length} أغنية`:'';state.tracks.slice(0,12).forEach((track,index)=>{const item=document.createElement('article');item.className='ai-dj-track';item.innerHTML=`<span>${index+1}</span><img src="${track.album?.images?.[0]?.url||''}" alt=""><div><strong>${track.name||''}</strong><small>${track.artists?.map(a=>a.name).join('، ')||''}</small></div>`;wrap.appendChild(item)})}
+async function generateSession(){if(state.busy)return;const bridge=getBridge();if(!bridge)return;const input=$('#aiDjPrompt'),button=$('#aiDjGenerate'),message=$('#aiDjStatus');const prompt=normalizePrompt(input.value);if(!prompt){message.textContent='اكتب نوع الجلسة التي تريدها.';return}state.busy=true;state.prompt=prompt;button.disabled=true;button.textContent='جارٍ البناء…';message.textContent='AI DJ يبحث ويجمع أفضل النتائج…';try{const queries=buildQueries(prompt),all=[];for(const query of queries){const data=await bridge.api('/search?'+new URLSearchParams({q:query,type:'track',limit:'10',offset:'0'}));all.push(...(data.tracks?.items||[]));await sleep(120)}const taste=bridge.getStorage('taste.profile')||{};const unique=[...new Map(all.filter(t=>t?.id).map(t=>[t.id,t])).values()];state.tracks=unique.map(track=>({track,score:scoreTrack(track,prompt,taste)})).sort((a,b)=>b.score-a.score).map(x=>x.track).slice(0,30);renderPreview();message.textContent=state.tracks.length?`تم إنشاء جلسة «${prompt}» بنجاح.`:'لم أجد نتائج كافية لهذه الجلسة.';bridge.setStorage('aiDj.lastSession',{prompt,tracks:state.tracks,createdAt:Date.now()})}catch(error){console.error(error);message.textContent=error.message||'تعذر إنشاء الجلسة الآن.'}finally{state.busy=false;button.disabled=false;button.textContent='✨ إنشاء الجلسة'}}
+async function playSession(){const bridge=getBridge();if(!state.tracks.length){$('#aiDjStatus').textContent='أنشئ الجلسة أولًا.';return}$('#aiDjStatus').textContent='جارٍ تشغيل الجلسة الذكية…';try{await bridge.playQueue(state.tracks,{startIndex:0,source:'ai-dj'});$('#aiDjStatus').textContent=`بدأ تشغيل جلسة من ${state.tracks.length} أغنية ✓`}catch(error){console.error(error);$('#aiDjStatus').textContent=error.message||'تعذر تشغيل الجلسة.'}}
+async function init(){const bridge=await waitForBridge();const last=bridge.getStorage('aiDj.lastSession');if(last?.tracks?.length){state.tracks=last.tracks;state.prompt=last.prompt||'';$('#aiDjPrompt').value=state.prompt;renderPreview();$('#aiDjStatus').textContent='تم استعادة آخر جلسة ذكية.'}$('#aiDjGenerate').addEventListener('click',generateSession);$('#aiDjPlay').addEventListener('click',playSession);document.querySelectorAll('[data-ai-preset]').forEach(btn=>btn.addEventListener('click',()=>{$('#aiDjPrompt').value=btn.dataset.aiPreset;generateSession()}))}
+init().catch(error=>console.error('[AI DJ isolated]',error));

@@ -29,11 +29,24 @@
   </main>
 
   <aside id="playerBar" class="player-bar hidden" aria-label="مشغل Asiri Music">
-    <img id="playerCover" alt="غلاف الأغنية الحالية" />
-    <div class="player-meta"><strong id="playerTrack">اختر أغنية للتشغيل</strong><span id="playerArtist">Asiri Music Player</span><div class="progress"><span id="playerProgress"></span></div></div>
+    <button id="openNowPlaying" class="player-open" aria-label="فتح شاشة التشغيل"><img id="playerCover" alt="غلاف الأغنية الحالية" /></button>
+    <button id="openNowPlayingMeta" class="player-meta player-meta-button"><strong id="playerTrack">اختر أغنية للتشغيل</strong><span id="playerArtist">Asiri Music Player</span><div class="progress"><span id="playerProgress"></span></div></button>
     <div class="player-controls"><button id="previousButton" aria-label="السابق">⏮</button><button id="playPauseButton" class="main-play" aria-label="تشغيل أو إيقاف">▶</button><button id="nextButton" aria-label="التالي">⏭</button></div>
     <span id="playerStatus" class="player-status">جاهز</span>
   </aside>
+
+  <section id="nowPlaying" class="now-playing hidden" aria-label="التشغيل الآن">
+    <div id="nowPlayingBackdrop" class="now-playing-backdrop"></div>
+    <div class="now-playing-content">
+      <header class="now-playing-header"><button id="closeNowPlaying" aria-label="إغلاق">⌄</button><div><span>يعمل الآن</span><strong>Asiri Music</strong></div><button id="nowFavoriteButton" aria-label="إضافة للمفضلة">♡</button></header>
+      <div class="artwork-wrap"><img id="nowCover" alt="غلاف الأغنية" /></div>
+      <div class="now-meta"><h2 id="nowTrack">اختر أغنية</h2><p id="nowArtist">Asiri Music Player</p></div>
+      <div class="now-progress-wrap"><input id="nowSeek" type="range" min="0" max="1000" value="0" aria-label="موضع التشغيل" /><div class="now-times"><span id="nowPosition">0:00</span><span id="nowDuration">0:00</span></div></div>
+      <div class="now-controls"><button id="nowPrevious" aria-label="السابق">⏮</button><button id="nowPlayPause" class="now-main-play" aria-label="تشغيل أو إيقاف">▶</button><button id="nowNext" aria-label="التالي">⏭</button></div>
+      <div class="now-actions"><button id="nowSave">♡ مفضلة Asiri</button><a id="nowSpotifyLink" target="_blank" rel="noopener">فتح في Spotify</a></div>
+      <p id="nowStatus">المشغل جاهز</p>
+    </div>
+  </section>
 
   <template id="trackTemplate"><article class="track-card"><img class="track-cover" alt="غلاف الأغنية" /><div class="track-info"><strong class="track-name"></strong><span class="track-artist"></span><span class="track-album"></span></div><div class="track-actions"><button class="play-track primary-action">▶ تشغيل هنا</button><a class="open-spotify" target="_blank" rel="noopener">فتح في Spotify</a><button class="favorite-track">♡ مفضلة Asiri</button><button class="save-track">حفظ في Spotify</button></div></article></template>
 

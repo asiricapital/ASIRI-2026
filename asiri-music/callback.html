@@ -9,7 +9,7 @@
 <body>
   <main><h1>جارٍ ربط Spotify…</h1><p id="message">يرجى الانتظار.</p></main>
   <script type="module">
-    const CLIENT_ID = '3163isshqg6ym3o7xracjn4js7ce';
+    const CLIENT_ID = '3ac122f971744e508bfd33ad0637d421';
     const redirectUri = window.location.href.split('?')[0];
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
@@ -38,7 +38,9 @@
           })
         });
         if (!response.ok) {
-          message.textContent = 'تعذر إكمال الربط. تحقق من Redirect URI.';
+          const details = await response.text();
+          console.error('Spotify token exchange failed', response.status, details);
+          message.textContent = 'تعذر إكمال الربط. أعد المحاولة بعد تحديث الصفحة.';
         } else {
           const payload = await response.json();
           localStorage.setItem('spotify_access_token', payload.access_token);

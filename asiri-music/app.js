@@ -110,7 +110,14 @@ async function spotify(path, options = {}) {
     clearTokens();
     throw new Error('AUTH_REQUIRED');
   }
-  if (!response.ok) throw new Error(`SPOTIFY_${response.status}`);
+  if (!response.ok) {
+    let detail = '';
+    try {
+      const payload = await response.json();
+      detail = payload?.error?.message || payload?.error || '';
+    } catch {}
+    throw new Error(`SPOTIFY_${response.status}${detail ? `: ${detail}` : ''}`);
+  }
   return response.status === 204 ? null : response.json();
 }
 
@@ -118,7 +125,7 @@ async function loadProfile() {
   try {
     const me = await spotify('/me');
     profileName.textContent = me.display_name || me.id;
-    profilePlan.textContent = me.product === 'premium' ? 'Spotify Premium' : `الخطة: ${me.product || 'غير معروفة'}`;
+    profilePlan.textContent = me.product === 'premium' ? 'Spotify Premium' : 'Spotify متصل';
     profileImage.src = me.images?.[0]?.url || '';
     profileCard.classList.remove('hidden');
     authButton.classList.add('hidden');
@@ -136,17 +143,21 @@ function renderTracks(items = []) {
   for (const track of items) {
     const node = trackTemplate.content.cloneNode(true);
     node.querySelector('.track-cover').src = track.album?.images?.[0]?.url || '';
-    node.querySelector('.track-name').textContent = track.name;
-    node.querySelector('.track-artist').textContent = track.artists?.map(a => a.name).join('، ');
+    node.querySelector('.track-name').textContent = track.name || 'بدون اسم';
+    node.querySelector('.track-artist').textContent = track.artists?.map(a => a.name).join('، ') || '';
     node.querySelector('.track-album').textContent = track.album?.name || '';
     node.querySelector('.open-spotify').href = track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`;
     node.querySelector('.save-track').addEventListener('click', async event => {
       const button = event.currentTarget;
       button.disabled = true;
       try {
-        await spotify(`/me/tracks?ids=${encodeURIComponent(track.id)}`, { method: 'PUT' });
+        await spotify('/me/library', {
+          method: 'PUT',
+          body: JSON.stringify({ uris: [track.uri || `spotify:track:${track.id}`] })
+        });
         button.textContent = 'تم الحفظ ✓';
-      } catch {
+      } catch (error) {
+        console.error(error);
         button.textContent = 'تعذر الحفظ';
       } finally {
         button.disabled = false;
@@ -158,12 +169,30 @@ function renderTracks(items = []) {
 
 async function searchTracks(query) {
   statusText.textContent = 'جارٍ البحث...';
+  results.innerHTML = '';
+  resultCount.textContent = '';
   try {
-    const data = await spotify(`/search?type=track&limit=20&q=${encodeURIComponent(query)}`);
-    renderTracks(data.tracks?.items || []);
-    statusText.textContent = data.tracks?.items?.length ? 'اضغط فتح في Spotify للتشغيل، أو حفظ لإضافتها إلى أغانيك.' : 'لم يتم العثور على نتائج.';
+    const params = new URLSearchParams({
+      q: query,
+      type: 'track',
+      limit: '10',
+      offset: '0'
+    });
+    const data = await spotify(`/search?${params.toString()}`);
+    const items = data.tracks?.items || [];
+    renderTracks(items);
+    statusText.textContent = items.length
+      ? 'اضغط «فتح في Spotify» للتشغيل، أو «حفظ» لإضافتها إلى مكتبتك.'
+      : 'لم يتم العثور على نتائج.';
   } catch (error) {
-    statusText.textContent = error.message === 'AUTH_REQUIRED' ? 'سجّل الدخول أولًا.' : 'تعذر إكمال البحث الآن.';
+    console.error('Spotify search failed:', error);
+    if (error.message === 'AUTH_REQUIRED') {
+      statusText.textContent = 'انتهت جلسة الربط. سجّل الدخول من جديد.';
+    } else if (error.message.startsWith('SPOTIFY_429')) {
+      statusText.textContent = 'تم تجاوز حد الطلبات مؤقتًا. حاول بعد قليل.';
+    } else {
+      statusText.textContent = `تعذر البحث: ${error.message.replace('SPOTIFY_', 'رمز ')}`;
+    }
   }
 }
 
@@ -180,11 +209,13 @@ async function loadPlaylists() {
       const image = item.images?.[0]?.url || '';
       link.innerHTML = `<img src="${image}" alt=""><div><strong></strong><span></span></div>`;
       link.querySelector('strong').textContent = item.name;
-      link.querySelector('span').textContent = `${item.tracks?.total || 0} أغنية`;
+      const total = item.items?.total ?? item.tracks?.total ?? 0;
+      link.querySelector('span').textContent = `${total} أغنية`;
       playlists.appendChild(link);
     }
-  } catch {
-    playlists.innerHTML = '<p class="status-text">سجّل الدخول لعرض قوائمك.</p>';
+  } catch (error) {
+    console.error('Spotify playlists failed:', error);
+    playlists.innerHTML = '<p class="status-text">تعذر تحديث القوائم الآن.</p>';
   }
 }
 

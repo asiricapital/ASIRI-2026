@@ -1,5 +1,5 @@
-const CACHE = 'asiri-music-v12';
-const ASSETS = ['./', 'index.html', 'styles.css', 'search-more.css', 'app.js', 'dj.js', 'search-more.js', 'taste.js', 'callback.html', 'manifest.webmanifest'];
+const CACHE = 'asiri-music-v13';
+const ASSETS = ['./', 'index.html', 'styles.css', 'search-more.css', 'app.js', 'dj.js', 'search-more.js', 'taste.js', 'smart-queue.js', 'callback.html', 'manifest.webmanifest'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));

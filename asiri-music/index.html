@@ -42,7 +42,10 @@
       <section><div class="section-heading"><h2>آخر عمليات البحث</h2><button id="clearHistory" class="text-button">مسح</button></div><div id="recentSearches" class="chips"><span class="muted">لا يوجد سجل بعد.</span></div></section>
     </section>
 
-    <section id="searchView" class="view"><section class="hero-card"><div><p class="eyebrow">بحث ذكي وسريع</p><h2>ابحث عن أغنية أو فنان</h2></div><form id="searchForm" class="search-form"><input id="searchInput" type="search" placeholder="مثال: محمد عبده - الأماكن" autocomplete="off" /><button type="submit">بحث</button></form><p id="statusText" class="status-text">سجّل الدخول لبدء البحث وإدارة قوائمك.</p></section><section><div class="section-heading"><h2>نتائج البحث</h2><span id="resultCount"></span></div><div id="results" class="track-grid"></div></section></section>
+    <section id="searchView" class="view">
+      <section class="hero-card"><div><p class="eyebrow">بحث ذكي وسريع</p><h2>ابحث عن أغنية أو فنان</h2></div><form id="searchForm" class="search-form"><input id="searchInput" type="search" placeholder="مثال: محمد عبده - الأماكن" autocomplete="off" /><button type="submit">بحث</button></form><p id="statusText" class="status-text">سجّل الدخول لبدء البحث وإدارة قوائمك.</p></section>
+      <section><div class="section-heading"><h2>نتائج البحث</h2><span id="resultCount"></span></div><div id="results" class="track-grid"></div><div class="load-more-wrap"><button id="loadMoreButton" class="load-more-button hidden">عرض 10 نتائج إضافية</button><span id="searchLimitNote" class="search-limit-note hidden"></span></div></section>
+    </section>
 
     <section id="libraryView" class="view"><section><div class="section-heading"><h2>مفضلة Asiri</h2><span id="favoriteCount"></span></div><div id="favorites" class="track-grid"></div></section><section><div class="section-heading"><h2>قوائم Spotify</h2><button id="refreshPlaylists" class="text-button">تحديث</button></div><div id="playlists" class="playlist-grid"></div></section></section>
   </main>

@@ -1,4 +1,5 @@
 const TASTE_KEY='asiri_taste_profile_v1';
+const DAILY_KEY='asiri_daily_pick_date';
 const $=s=>document.querySelector(s);
 
 function loadTaste(){
@@ -22,17 +23,29 @@ function trackFromCard(card){
 }
 function recordPreference(track,value){
   const data=loadTaste();
-  data.tracks[track.id]={...track,value,updatedAt:Date.now()};
+  const previous=data.tracks[track.id]?.value;
   const artists=track.artist.split('،').map(x=>x.trim()).filter(Boolean);
-  artists.forEach(name=>{
-    const current=data.artists[name]||{likes:0,dislikes:0,score:0};
-    if(value==='like'){current.likes+=1;current.score+=2}else{current.dislikes+=1;current.score-=2}
-    data.artists[name]=current;
-  });
+  if(previous&&previous!==value){
+    artists.forEach(name=>{
+      const current=data.artists[name]||{likes:0,dislikes:0,score:0};
+      if(previous==='like'){current.likes=Math.max(0,current.likes-1);current.score-=2}
+      else{current.dislikes=Math.max(0,current.dislikes-1);current.score+=2}
+      data.artists[name]=current;
+    });
+  }
+  if(previous!==value){
+    artists.forEach(name=>{
+      const current=data.artists[name]||{likes:0,dislikes:0,score:0};
+      if(value==='like'){current.likes+=1;current.score+=2}else{current.dislikes+=1;current.score-=2}
+      data.artists[name]=current;
+    });
+  }
+  data.tracks[track.id]={...track,value,updatedAt:Date.now()};
   data.events.unshift({type:value,trackId:track.id,artist:track.artist,at:Date.now()});
   data.events=data.events.slice(0,300);
   saveTaste(data);
   renderTasteDashboard();
+  renderDailyPicks();
   syncButtons();
 }
 function currentValue(id){return loadTaste().tracks[id]?.value||''}
@@ -56,8 +69,40 @@ function syncButtons(){
     card.querySelector('.taste-dislike')?.classList.toggle('active',value==='dislike');
   })
 }
-function topArtists(data){
-  return Object.entries(data.artists).sort((a,b)=>b[1].score-a[1].score).filter(([,v])=>v.score>0).slice(0,5)
+function topArtists(data,limit=5){
+  return Object.entries(data.artists).sort((a,b)=>b[1].score-a[1].score).filter(([,v])=>v.score>0).slice(0,limit)
+}
+function todaySeed(){
+  const d=new Date();return Number(`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`)
+}
+function dailyArtists(data){
+  const ranked=topArtists(data,12).map(([name])=>name);
+  if(!ranked.length)return[];
+  const shift=todaySeed()%ranked.length;
+  return [...ranked.slice(shift),...ranked.slice(0,shift)].slice(0,3);
+}
+function launchDailySession(){
+  const data=loadTaste();
+  const artists=dailyArtists(data);
+  const liked=Object.values(data.tracks).filter(x=>x.value==='like');
+  let query='أغاني خليجية عربية مختارة';
+  if(artists.length)query=artists.join(' ');
+  else if(liked[0]?.artist)query=liked[0].artist;
+  const input=$('#searchInput'),form=$('#searchForm');
+  document.querySelector('[data-view="search"]')?.click();
+  if(input)input.value=query;
+  localStorage.setItem(DAILY_KEY,new Date().toISOString().slice(0,10));
+  form?.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+}
+function renderDailyPicks(){
+  const data=loadTaste();
+  const liked=Object.values(data.tracks).filter(x=>x.value==='like');
+  const artists=dailyArtists(data);
+  const names=$('#dailyArtistNames'),message=$('#dailyPickMessage'),button=$('#dailyPickButton'),badge=$('#dailyPickBadge');
+  if(names)names.textContent=artists.length?artists.join(' • '):'بانتظار اكتشاف ذوقك';
+  if(message)message.textContent=liked.length>=3?'جلسة تتغير يوميًا وتُبنى من أعلى الفنانين تقييمًا لديك، مع استبعاد اختيارات «لا تناسبني».':'قيّم 3 أغنيات على الأقل ليصبح اختيار اليوم أدق.';
+  if(button){button.disabled=liked.length===0;button.textContent=liked.length?'▶ تشغيل مختارات اليوم':'ابدأ بتقييم الأغاني'}
+  if(badge){const used=localStorage.getItem(DAILY_KEY)===new Date().toISOString().slice(0,10);badge.textContent=used?'تم تشغيلها اليوم':'جديدة اليوم';badge.classList.toggle('used',used)}
 }
 function renderTasteDashboard(){
   const data=loadTaste();
@@ -68,27 +113,26 @@ function renderTasteDashboard(){
   if(likedCount)likedCount.textContent=liked.length;
   if(dislikedCount)dislikedCount.textContent=disliked.length;
   if(learnedCount)learnedCount.textContent=Object.keys(data.artists).length;
-  if(artistList){
-    artistList.innerHTML=top.length?top.map(([name,v])=>`<span>${name}<b>${v.score}</b></span>`).join(''):'<em>ابدأ بالضغط على «أعجبتني» ليكتشف التطبيق ذوقك.</em>';
-  }
-  if(message){
-    message.textContent=liked.length>=5?'بدأ Asiri Music يفهم ذوقك وسيستخدمه في الجلسات القادمة.':`نحتاج ${Math.max(0,5-liked.length)} إعجابات إضافية لبناء ملف ذوق أولي.`;
-  }
+  if(artistList)artistList.innerHTML=top.length?top.map(([name,v])=>`<span>${name}<b>${v.score}</b></span>`).join(''):'<em>ابدأ بالضغط على «أعجبتني» ليكتشف التطبيق ذوقك.</em>';
+  if(message)message.textContent=liked.length>=5?'بدأ Asiri Music يفهم ذوقك ويستخدمه الآن في مختاراتك اليومية.':`نحتاج ${Math.max(0,5-liked.length)} إعجابات إضافية لبناء ملف ذوق أولي.`;
 }
 function injectDashboard(){
   if($('#tasteProfile'))return;
-  const home=$('#homeView');const stats=home?.querySelector('.stats-grid');if(!home||!stats)return;
+  const home=$('#homeView'),stats=home?.querySelector('.stats-grid');if(!home||!stats)return;
+  const daily=document.createElement('section');daily.id='dailyPicks';daily.className='daily-picks';
+  daily.innerHTML=`<div class="daily-glow"></div><div class="daily-content"><div class="daily-head"><div><p class="eyebrow">مختارات أحمد اليوم</p><h2>جلسة صُنعت لذوقك</h2></div><span id="dailyPickBadge" class="daily-badge">جديدة اليوم</span></div><strong id="dailyArtistNames" class="daily-artists">بانتظار اكتشاف ذوقك</strong><p id="dailyPickMessage" class="muted"></p><button id="dailyPickButton" class="daily-play" type="button">▶ تشغيل مختارات اليوم</button></div>`;
   const section=document.createElement('section');section.id='tasteProfile';section.className='taste-profile';
   section.innerHTML=`<div class="taste-head"><div><p class="eyebrow">Asiri Taste Engine</p><h2>ذوق أحمد الموسيقي</h2></div><span class="taste-live">يتعلم الآن</span></div><p id="tasteMessage" class="muted"></p><div class="taste-metrics"><article><span>أعجبتني</span><strong id="tasteLikedCount">0</strong></article><article><span>لا تناسبني</span><strong id="tasteDislikedCount">0</strong></article><article><span>فنانون تعلّمهم</span><strong id="tasteLearnedCount">0</strong></article></div><div class="taste-artists"><h3>أقرب الفنانين لذوقك</h3><div id="tasteArtists"></div></div>`;
-  stats.before(section);
+  stats.before(daily,section);
+  $('#dailyPickButton')?.addEventListener('click',launchDailySession);
 }
 
 const style=document.createElement('style');
-style.textContent=`.taste-profile{margin:22px 0;padding:21px;border-radius:26px;border:1px solid #2d4735;background:linear-gradient(145deg,#17281d,#101411);box-shadow:0 22px 60px rgba(0,0,0,.25)}.taste-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.taste-live{font-size:11px;font-weight:900;color:#061009;background:#1ed760;border-radius:999px;padding:7px 10px}.taste-profile>.muted{margin-top:10px}.taste-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}.taste-metrics article{background:rgba(255,255,255,.045);border:1px solid #2a352d;border-radius:17px;padding:13px}.taste-metrics span{display:block;color:#96a198;font-size:11px}.taste-metrics strong{display:block;margin-top:6px;font-size:24px}.taste-artists{margin-top:17px}.taste-artists h3{font-size:14px;margin:0 0 9px}.taste-artists div{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.taste-artists div span{flex:0 0 auto;border:1px solid #334039;border-radius:999px;padding:9px 12px;background:#151a16}.taste-artists b{color:#1ed760;margin-right:7px}.taste-artists em{color:#8e978f;font-style:normal;font-size:13px}.taste-actions{display:flex;gap:7px;width:100%}.taste-actions button{border:1px solid #39433c;background:transparent;color:#fff;border-radius:999px;padding:9px 12px;font-size:12px;cursor:pointer}.taste-like.active{border-color:#1ed760;color:#1ed760;background:rgba(30,215,96,.09)}.taste-dislike.active{border-color:#ff7070;color:#ff8d8d;background:rgba(255,85,85,.08)}@media(max-width:520px){.taste-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.taste-metrics article{padding:11px}.taste-metrics strong{font-size:21px}}`;
+style.textContent=`.daily-picks{position:relative;overflow:hidden;margin:22px 0;padding:1px;border-radius:28px;background:linear-gradient(120deg,#1ed760,#8affb2 42%,#26352b);box-shadow:0 24px 70px rgba(30,215,96,.16)}.daily-content{position:relative;padding:22px;border-radius:27px;background:linear-gradient(145deg,rgba(13,25,17,.97),rgba(7,12,9,.98));z-index:1}.daily-glow{position:absolute;width:190px;height:190px;border-radius:50%;background:#1ed760;filter:blur(70px);opacity:.18;left:-40px;top:-70px}.daily-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.daily-badge{font-size:11px;font-weight:900;color:#061009;background:#1ed760;border-radius:999px;padding:7px 10px}.daily-badge.used{background:#27352c;color:#9bb3a2}.daily-artists{display:block;margin-top:18px;font-size:19px;line-height:1.7}.daily-play{width:100%;margin-top:15px;border:0;border-radius:16px;background:#1ed760;color:#061009;font-weight:900;padding:14px;cursor:pointer}.daily-play:disabled{opacity:.45;cursor:not-allowed}.taste-profile{margin:22px 0;padding:21px;border-radius:26px;border:1px solid #2d4735;background:linear-gradient(145deg,#17281d,#101411);box-shadow:0 22px 60px rgba(0,0,0,.25)}.taste-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.taste-live{font-size:11px;font-weight:900;color:#061009;background:#1ed760;border-radius:999px;padding:7px 10px}.taste-profile>.muted{margin-top:10px}.taste-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}.taste-metrics article{background:rgba(255,255,255,.045);border:1px solid #2a352d;border-radius:17px;padding:13px}.taste-metrics span{display:block;color:#96a198;font-size:11px}.taste-metrics strong{display:block;margin-top:6px;font-size:24px}.taste-artists{margin-top:17px}.taste-artists h3{font-size:14px;margin:0 0 9px}.taste-artists div{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.taste-artists div span{flex:0 0 auto;border:1px solid #334039;border-radius:999px;padding:9px 12px;background:#151a16}.taste-artists b{color:#1ed760;margin-right:7px}.taste-artists em{color:#8e978f;font-style:normal;font-size:13px}.taste-actions{display:flex;gap:7px;width:100%}.taste-actions button{border:1px solid #39433c;background:transparent;color:#fff;border-radius:999px;padding:9px 12px;font-size:12px;cursor:pointer}.taste-like.active{border-color:#1ed760;color:#1ed760;background:rgba(30,215,96,.09)}.taste-dislike.active{border-color:#ff7070;color:#ff8d8d;background:rgba(255,85,85,.08)}@media(max-width:520px){.taste-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.taste-metrics article{padding:11px}.taste-metrics strong{font-size:21px}.daily-head{align-items:center}.daily-artists{font-size:17px}}`;
 document.head.appendChild(style);
 
 injectDashboard();
-document.querySelectorAll('.track-card').forEach(enhanceCard);syncButtons();renderTasteDashboard();
+document.querySelectorAll('.track-card').forEach(enhanceCard);syncButtons();renderTasteDashboard();renderDailyPicks();
 const observer=new MutationObserver(()=>{document.querySelectorAll('.track-card').forEach(enhanceCard);syncButtons()});
 observer.observe(document.body,{childList:true,subtree:true});
-window.addEventListener('storage',renderTasteDashboard);
+window.addEventListener('storage',()=>{renderTasteDashboard();renderDailyPicks()});

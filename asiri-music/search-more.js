@@ -6,7 +6,7 @@ const searchLimitNote = $('#searchLimitNote');
 const trackTemplate = $('#trackTemplate');
 const sentinel = $('#searchSentinel');
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 let activeQuery = '';
 let nextOffset = 0;
 let loading = false;
@@ -53,7 +53,14 @@ async function api(path, options = {}) {
       ...(options.headers || {})
     }
   });
-  if (!response.ok) throw new Error(`SPOTIFY_${response.status}`);
+  if (!response.ok) {
+    let detail = '';
+    try {
+      const payload = await response.json();
+      detail = payload?.error?.message || payload?.error?.reason || '';
+    } catch {}
+    throw new Error(`SPOTIFY_${response.status}${detail ? `: ${detail}` : ''}`);
+  }
   return response.status === 204 ? null : response.json();
 }
 
@@ -188,7 +195,8 @@ async function loadMore() {
     else setNote('تم الوصول إلى نهاية نتائج Spotify لهذا البحث.', 'complete');
   } catch (error) {
     console.error(error);
-    setNote('تعذر تحميل المزيد الآن. حرّك الصفحة قليلًا للمحاولة مجددًا.', 'error');
+    if (error.message.startsWith('SPOTIFY_429')) setNote('تم بلوغ حد طلبات Spotify مؤقتًا. انتظر قليلًا ثم حرّك الصفحة للمحاولة.', 'error');
+    else setNote('تعذر تحميل المزيد الآن. حرّك الصفحة قليلًا للمحاولة مجددًا.', 'error');
   } finally {
     loading = false;
   }

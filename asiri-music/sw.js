@@ -1,4 +1,4 @@
-const CACHE = 'asiri-music-v3';
+const CACHE = 'asiri-music-v4';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'callback.html', 'manifest.webmanifest'];
 
 self.addEventListener('install', event => {

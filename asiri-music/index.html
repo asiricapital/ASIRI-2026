@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0b0b" />
+  <meta name="theme-color" content="#07110a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Asiri Music</title>
@@ -14,7 +14,7 @@
   <main class="app-shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">مكتبتك الخاصة</p>
+        <p class="eyebrow">مساعدك الموسيقي الخاص</p>
         <h1>Asiri Music</h1>
       </div>
       <button id="authButton" class="spotify-button">الدخول عبر Spotify</button>
@@ -29,46 +29,80 @@
       <button id="logoutButton" class="ghost-button">خروج</button>
     </section>
 
-    <section class="hero-card">
-      <div>
-        <p class="eyebrow">بحث سريع</p>
-        <h2>ابحث عن أغنية أو فنان</h2>
-      </div>
-      <form id="searchForm" class="search-form">
-        <input id="searchInput" type="search" placeholder="مثال: محمد عبده - الأماكن" autocomplete="off" />
-        <button type="submit">بحث</button>
-      </form>
-      <p id="statusText" class="status-text">سجّل الدخول لبدء البحث وإدارة قوائمك.</p>
+    <nav class="tabs" aria-label="التنقل الرئيسي">
+      <button class="tab active" data-view="home">الرئيسية</button>
+      <button class="tab" data-view="search">البحث</button>
+      <button class="tab" data-view="library">مكتبتي</button>
+    </nav>
+
+    <section id="homeView" class="view active">
+      <section class="welcome-card">
+        <div>
+          <p class="eyebrow">لوحتك اليومية</p>
+          <h2 id="welcomeTitle">مرحبًا أحمد</h2>
+          <p class="muted">وصول سريع إلى موسيقاك وقوائمك المفضلة.</p>
+        </div>
+        <button class="round-action" data-open-search aria-label="فتح البحث">⌕</button>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card"><span>قوائم Spotify</span><strong id="playlistStat">—</strong></article>
+        <article class="stat-card"><span>عمليات البحث</span><strong id="searchStat">0</strong></article>
+        <article class="stat-card"><span>مفضلة Asiri</span><strong id="favoriteStat">0</strong></article>
+      </section>
+
+      <section>
+        <div class="section-heading"><h2>اختيار سريع</h2></div>
+        <div class="quick-grid">
+          <button class="quick-card" data-query="محمد عبده"><span>🎻</span><strong>محمد عبده</strong><small>الطرب الأصيل</small></button>
+          <button class="quick-card" data-query="أغاني هادئة عربية"><span>🌙</span><strong>هدوء المساء</strong><small>مزاج هادئ</small></button>
+          <button class="quick-card" data-query="أغاني عربية للسيارة"><span>🚗</span><strong>طريق وسفر</strong><small>للقيادة</small></button>
+          <button class="quick-card" data-query="كلاسيكيات خليجية"><span>☕</span><strong>جلسة قهوة</strong><small>كلاسيكيات</small></button>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading"><h2>آخر عمليات البحث</h2><button id="clearHistory" class="text-button">مسح</button></div>
+        <div id="recentSearches" class="chips"><span class="muted">لا يوجد سجل بعد.</span></div>
+      </section>
     </section>
 
-    <section>
-      <div class="section-heading">
-        <h2>نتائج البحث</h2>
-        <span id="resultCount"></span>
-      </div>
-      <div id="results" class="track-grid"></div>
+    <section id="searchView" class="view">
+      <section class="hero-card">
+        <div><p class="eyebrow">بحث ذكي وسريع</p><h2>ابحث عن أغنية أو فنان</h2></div>
+        <form id="searchForm" class="search-form">
+          <input id="searchInput" type="search" placeholder="مثال: محمد عبده - الأماكن" autocomplete="off" />
+          <button type="submit">بحث</button>
+        </form>
+        <p id="statusText" class="status-text">سجّل الدخول لبدء البحث وإدارة قوائمك.</p>
+      </section>
+
+      <section>
+        <div class="section-heading"><h2>نتائج البحث</h2><span id="resultCount"></span></div>
+        <div id="results" class="track-grid"></div>
+      </section>
     </section>
 
-    <section>
-      <div class="section-heading">
-        <h2>قوائمك</h2>
-        <button id="refreshPlaylists" class="text-button">تحديث</button>
-      </div>
-      <div id="playlists" class="playlist-grid"></div>
+    <section id="libraryView" class="view">
+      <section>
+        <div class="section-heading"><h2>مفضلة Asiri</h2><span id="favoriteCount"></span></div>
+        <div id="favorites" class="track-grid"></div>
+      </section>
+      <section>
+        <div class="section-heading"><h2>قوائم Spotify</h2><button id="refreshPlaylists" class="text-button">تحديث</button></div>
+        <div id="playlists" class="playlist-grid"></div>
+      </section>
     </section>
   </main>
 
   <template id="trackTemplate">
     <article class="track-card">
       <img class="track-cover" alt="غلاف الأغنية" />
-      <div class="track-info">
-        <strong class="track-name"></strong>
-        <span class="track-artist"></span>
-        <span class="track-album"></span>
-      </div>
+      <div class="track-info"><strong class="track-name"></strong><span class="track-artist"></span><span class="track-album"></span></div>
       <div class="track-actions">
         <a class="open-spotify" target="_blank" rel="noopener">فتح في Spotify</a>
-        <button class="save-track">حفظ</button>
+        <button class="favorite-track">♡ مفضلة Asiri</button>
+        <button class="save-track">حفظ في Spotify</button>
       </div>
     </article>
   </template>

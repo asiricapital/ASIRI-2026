@@ -1,235 +1,46 @@
-const CLIENT_ID = '3ac122f971744e508bfd33ad0637d421';
-const SCOPES = [
-  'user-read-private',
-  'user-read-email',
-  'user-library-read',
-  'user-library-modify',
-  'playlist-read-private',
-  'playlist-modify-private',
-  'playlist-modify-public'
-];
+const CLIENT_ID='3ac122f971744e508bfd33ad0637d421';
+const SCOPES=['user-read-private','user-read-email','user-library-read','user-library-modify','playlist-read-private','playlist-modify-private','playlist-modify-public'];
+const redirectUri=new URL('callback.html',window.location.href).href;
+const $=selector=>document.querySelector(selector);
+const $$=selector=>[...document.querySelectorAll(selector)];
+const authButton=$('#authButton'),logoutButton=$('#logoutButton'),profileCard=$('#profileCard'),profileImage=$('#profileImage'),profileName=$('#profileName'),profilePlan=$('#profilePlan');
+const searchForm=$('#searchForm'),searchInput=$('#searchInput'),results=$('#results'),playlists=$('#playlists'),favorites=$('#favorites'),resultCount=$('#resultCount'),statusText=$('#statusText'),refreshPlaylists=$('#refreshPlaylists'),trackTemplate=$('#trackTemplate');
+const recentSearches=$('#recentSearches'),clearHistory=$('#clearHistory'),playlistStat=$('#playlistStat'),searchStat=$('#searchStat'),favoriteStat=$('#favoriteStat'),favoriteCount=$('#favoriteCount'),welcomeTitle=$('#welcomeTitle');
+let favoriteTracks=JSON.parse(localStorage.getItem('asiri_favorites')||'[]');
+let searchHistory=JSON.parse(localStorage.getItem('asiri_search_history')||'[]');
 
-const redirectUri = new URL('callback.html', window.location.href).href;
-const authButton = document.querySelector('#authButton');
-const logoutButton = document.querySelector('#logoutButton');
-const profileCard = document.querySelector('#profileCard');
-const profileImage = document.querySelector('#profileImage');
-const profileName = document.querySelector('#profileName');
-const profilePlan = document.querySelector('#profilePlan');
-const searchForm = document.querySelector('#searchForm');
-const searchInput = document.querySelector('#searchInput');
-const results = document.querySelector('#results');
-const playlists = document.querySelector('#playlists');
-const resultCount = document.querySelector('#resultCount');
-const statusText = document.querySelector('#statusText');
-const refreshPlaylists = document.querySelector('#refreshPlaylists');
-const trackTemplate = document.querySelector('#trackTemplate');
+function base64url(input){return btoa(String.fromCharCode(...new Uint8Array(input))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_')}
+async function sha256(text){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))}
+function randomString(length=64){const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~',values=crypto.getRandomValues(new Uint8Array(length));return Array.from(values,value=>chars[value%chars.length]).join('')}
+function storeTokens(payload){localStorage.setItem('spotify_access_token',payload.access_token);localStorage.setItem('spotify_expires_at',String(Date.now()+payload.expires_in*1000-60000));if(payload.refresh_token)localStorage.setItem('spotify_refresh_token',payload.refresh_token)}
+function clearTokens(){['spotify_access_token','spotify_expires_at','spotify_refresh_token','spotify_code_verifier'].forEach(key=>localStorage.removeItem(key))}
+async function login(){const verifier=randomString(),challenge=base64url(await sha256(verifier));localStorage.setItem('spotify_code_verifier',verifier);const params=new URLSearchParams({client_id:CLIENT_ID,response_type:'code',redirect_uri:redirectUri,scope:SCOPES.join(' '),code_challenge_method:'S256',code_challenge:challenge,show_dialog:'true'});location.href=`https://accounts.spotify.com/authorize?${params}`}
+async function refreshAccessToken(){const refreshToken=localStorage.getItem('spotify_refresh_token');if(!refreshToken)return null;const response=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:CLIENT_ID,grant_type:'refresh_token',refresh_token:refreshToken})});if(!response.ok)return null;const payload=await response.json();storeTokens(payload);return payload.access_token}
+async function getAccessToken(){const token=localStorage.getItem('spotify_access_token'),expiresAt=Number(localStorage.getItem('spotify_expires_at')||0);return token&&Date.now()<expiresAt?token:refreshAccessToken()}
+async function spotify(path,options={}){const token=await getAccessToken();if(!token)throw new Error('AUTH_REQUIRED');const response=await fetch(`https://api.spotify.com/v1${path}`,{...options,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json',...(options.headers||{})}});if(response.status===401){clearTokens();throw new Error('AUTH_REQUIRED')}if(!response.ok){let detail='';try{const payload=await response.json();detail=payload?.error?.message||payload?.error||''}catch{}throw new Error(`SPOTIFY_${response.status}${detail?`: ${detail}`:''}`)}return response.status===204?null:response.json()}
 
-function base64url(input) {
-  return btoa(String.fromCharCode(...new Uint8Array(input)))
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-}
+function openView(name){$$('.view').forEach(view=>view.classList.toggle('active',view.id===`${name}View`));$$('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===name));if(name==='library')renderFavorites();window.scrollTo({top:0,behavior:'smooth'})}
+$$('.tab').forEach(tab=>tab.addEventListener('click',()=>openView(tab.dataset.view)));
+$$('[data-open-search]').forEach(button=>button.addEventListener('click',()=>openView('search')));
 
-async function sha256(text) {
-  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-}
+function persistFavorites(){localStorage.setItem('asiri_favorites',JSON.stringify(favoriteTracks));updateStats();renderFavorites()}
+function toggleFavorite(track){const index=favoriteTracks.findIndex(item=>item.id===track.id);if(index>=0)favoriteTracks.splice(index,1);else favoriteTracks.unshift({id:track.id,name:track.name,uri:track.uri,artists:track.artists,album:track.album,external_urls:track.external_urls});persistFavorites()}
+function isFavorite(id){return favoriteTracks.some(track=>track.id===id)}
+function addHistory(query){searchHistory=[query,...searchHistory.filter(item=>item!==query)].slice(0,8);localStorage.setItem('asiri_search_history',JSON.stringify(searchHistory));renderHistory();updateStats()}
+function renderHistory(){recentSearches.innerHTML='';if(!searchHistory.length){recentSearches.innerHTML='<span class="muted">لا يوجد سجل بعد.</span>';return}searchHistory.forEach(query=>{const button=document.createElement('button');button.className='chip';button.textContent=query;button.addEventListener('click',()=>runQuickSearch(query));recentSearches.appendChild(button)})}
+function updateStats(){searchStat.textContent=searchHistory.length;favoriteStat.textContent=favoriteTracks.length;favoriteCount.textContent=favoriteTracks.length?`${favoriteTracks.length} أغنية`:''}
 
-function randomString(length = 64) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  const values = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(values, value => chars[value % chars.length]).join('');
-}
+async function loadProfile(){try{const me=await spotify('/me');profileName.textContent=me.display_name||me.id;profilePlan.textContent=me.product==='premium'?'Spotify Premium':'Spotify متصل';profileImage.src=me.images?.[0]?.url||'';profileCard.classList.remove('hidden');authButton.classList.add('hidden');welcomeTitle.textContent=`مرحبًا ${String(me.display_name||'أحمد').split(' ')[0]}`;statusText.textContent='تم الربط بنجاح. ابحث الآن عن أي أغنية أو فنان.';await loadPlaylists()}catch{profileCard.classList.add('hidden');authButton.classList.remove('hidden')}}
 
-function storeTokens(payload) {
-  const expiresAt = Date.now() + payload.expires_in * 1000 - 60000;
-  localStorage.setItem('spotify_access_token', payload.access_token);
-  localStorage.setItem('spotify_expires_at', String(expiresAt));
-  if (payload.refresh_token) localStorage.setItem('spotify_refresh_token', payload.refresh_token);
-}
+function createTrackCard(track){const node=trackTemplate.content.cloneNode(true),favoriteButton=node.querySelector('.favorite-track');node.querySelector('.track-cover').src=track.album?.images?.[0]?.url||'';node.querySelector('.track-name').textContent=track.name||'بدون اسم';node.querySelector('.track-artist').textContent=track.artists?.map(a=>a.name).join('، ')||'';node.querySelector('.track-album').textContent=track.album?.name||'';node.querySelector('.open-spotify').href=track.external_urls?.spotify||`https://open.spotify.com/track/${track.id}`;favoriteButton.classList.toggle('active',isFavorite(track.id));favoriteButton.textContent=isFavorite(track.id)?'♥ ضمن مفضلتي':'♡ مفضلة Asiri';favoriteButton.addEventListener('click',()=>{toggleFavorite(track);favoriteButton.classList.toggle('active',isFavorite(track.id));favoriteButton.textContent=isFavorite(track.id)?'♥ ضمن مفضلتي':'♡ مفضلة Asiri'});node.querySelector('.save-track').addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;try{await spotify('/me/library',{method:'PUT',body:JSON.stringify({uris:[track.uri||`spotify:track:${track.id}`]})});button.textContent='تم الحفظ ✓'}catch{button.textContent='تعذر الحفظ'}finally{button.disabled=false}});return node}
+function renderTracks(items=[]){results.innerHTML='';resultCount.textContent=items.length?`${items.length} نتيجة`:'';items.forEach(track=>results.appendChild(createTrackCard(track)))}
+function renderFavorites(){favorites.innerHTML='';updateStats();if(!favoriteTracks.length){favorites.innerHTML='<p class="muted">أضف الأغاني من نتائج البحث لتظهر هنا.</p>';return}favoriteTracks.forEach(track=>favorites.appendChild(createTrackCard(track)))}
 
-function clearTokens() {
-  ['spotify_access_token', 'spotify_expires_at', 'spotify_refresh_token', 'spotify_code_verifier']
-    .forEach(key => localStorage.removeItem(key));
-}
+async function searchTracks(query){statusText.textContent='جارٍ البحث...';results.innerHTML='';resultCount.textContent='';try{const params=new URLSearchParams({q:query,type:'track',limit:'10',offset:'0'}),data=await spotify(`/search?${params}`),items=data.tracks?.items||[];renderTracks(items);addHistory(query);statusText.textContent=items.length?'افتح الأغنية في Spotify أو أضفها إلى مفضلة Asiri.':'لم يتم العثور على نتائج.'}catch(error){if(error.message==='AUTH_REQUIRED')statusText.textContent='انتهت جلسة الربط. سجّل الدخول من جديد.';else if(error.message.startsWith('SPOTIFY_429'))statusText.textContent='تم تجاوز حد الطلبات مؤقتًا. حاول بعد قليل.';else statusText.textContent=`تعذر البحث: ${error.message.replace('SPOTIFY_','رمز ')}`}}
+function runQuickSearch(query){searchInput.value=query;openView('search');searchTracks(query)}
+$$('[data-query]').forEach(button=>button.addEventListener('click',()=>runQuickSearch(button.dataset.query)));
 
-async function login() {
-  const verifier = randomString();
-  const challenge = base64url(await sha256(verifier));
-  localStorage.setItem('spotify_code_verifier', verifier);
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    response_type: 'code',
-    redirect_uri: redirectUri,
-    scope: SCOPES.join(' '),
-    code_challenge_method: 'S256',
-    code_challenge: challenge,
-    show_dialog: 'true'
-  });
-  window.location.href = `https://accounts.spotify.com/authorize?${params}`;
-}
+async function loadPlaylists(){playlists.innerHTML='';try{const data=await spotify('/me/playlists?limit=20'),items=data.items||[];playlistStat.textContent=items.length;items.forEach(item=>{const link=document.createElement('a');link.className='playlist-card';link.href=item.external_urls?.spotify||`https://open.spotify.com/playlist/${item.id}`;link.target='_blank';link.rel='noopener';link.innerHTML=`<img src="${item.images?.[0]?.url||''}" alt=""><div><strong></strong><span></span></div>`;link.querySelector('strong').textContent=item.name;link.querySelector('span').textContent=`${item.items?.total??item.tracks?.total??0} أغنية`;playlists.appendChild(link)})}catch{playlistStat.textContent='—';playlists.innerHTML='<p class="muted">تعذر تحديث القوائم الآن.</p>'}}
 
-async function refreshAccessToken() {
-  const refreshToken = localStorage.getItem('spotify_refresh_token');
-  if (!refreshToken) return null;
-  const response = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: CLIENT_ID,
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken
-    })
-  });
-  if (!response.ok) return null;
-  const payload = await response.json();
-  storeTokens(payload);
-  return payload.access_token;
-}
-
-async function getAccessToken() {
-  const token = localStorage.getItem('spotify_access_token');
-  const expiresAt = Number(localStorage.getItem('spotify_expires_at') || 0);
-  if (token && Date.now() < expiresAt) return token;
-  return refreshAccessToken();
-}
-
-async function spotify(path, options = {}) {
-  const token = await getAccessToken();
-  if (!token) throw new Error('AUTH_REQUIRED');
-  const response = await fetch(`https://api.spotify.com/v1${path}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
-  });
-  if (response.status === 401) {
-    clearTokens();
-    throw new Error('AUTH_REQUIRED');
-  }
-  if (!response.ok) {
-    let detail = '';
-    try {
-      const payload = await response.json();
-      detail = payload?.error?.message || payload?.error || '';
-    } catch {}
-    throw new Error(`SPOTIFY_${response.status}${detail ? `: ${detail}` : ''}`);
-  }
-  return response.status === 204 ? null : response.json();
-}
-
-async function loadProfile() {
-  try {
-    const me = await spotify('/me');
-    profileName.textContent = me.display_name || me.id;
-    profilePlan.textContent = me.product === 'premium' ? 'Spotify Premium' : 'Spotify متصل';
-    profileImage.src = me.images?.[0]?.url || '';
-    profileCard.classList.remove('hidden');
-    authButton.classList.add('hidden');
-    statusText.textContent = 'تم الربط بنجاح. ابحث الآن عن أي أغنية أو فنان.';
-    await loadPlaylists();
-  } catch {
-    profileCard.classList.add('hidden');
-    authButton.classList.remove('hidden');
-  }
-}
-
-function renderTracks(items = []) {
-  results.innerHTML = '';
-  resultCount.textContent = items.length ? `${items.length} نتيجة` : '';
-  for (const track of items) {
-    const node = trackTemplate.content.cloneNode(true);
-    node.querySelector('.track-cover').src = track.album?.images?.[0]?.url || '';
-    node.querySelector('.track-name').textContent = track.name || 'بدون اسم';
-    node.querySelector('.track-artist').textContent = track.artists?.map(a => a.name).join('، ') || '';
-    node.querySelector('.track-album').textContent = track.album?.name || '';
-    node.querySelector('.open-spotify').href = track.external_urls?.spotify || `https://open.spotify.com/track/${track.id}`;
-    node.querySelector('.save-track').addEventListener('click', async event => {
-      const button = event.currentTarget;
-      button.disabled = true;
-      try {
-        await spotify('/me/library', {
-          method: 'PUT',
-          body: JSON.stringify({ uris: [track.uri || `spotify:track:${track.id}`] })
-        });
-        button.textContent = 'تم الحفظ ✓';
-      } catch (error) {
-        console.error(error);
-        button.textContent = 'تعذر الحفظ';
-      } finally {
-        button.disabled = false;
-      }
-    });
-    results.appendChild(node);
-  }
-}
-
-async function searchTracks(query) {
-  statusText.textContent = 'جارٍ البحث...';
-  results.innerHTML = '';
-  resultCount.textContent = '';
-  try {
-    const params = new URLSearchParams({
-      q: query,
-      type: 'track',
-      limit: '10',
-      offset: '0'
-    });
-    const data = await spotify(`/search?${params.toString()}`);
-    const items = data.tracks?.items || [];
-    renderTracks(items);
-    statusText.textContent = items.length
-      ? 'اضغط «فتح في Spotify» للتشغيل، أو «حفظ» لإضافتها إلى مكتبتك.'
-      : 'لم يتم العثور على نتائج.';
-  } catch (error) {
-    console.error('Spotify search failed:', error);
-    if (error.message === 'AUTH_REQUIRED') {
-      statusText.textContent = 'انتهت جلسة الربط. سجّل الدخول من جديد.';
-    } else if (error.message.startsWith('SPOTIFY_429')) {
-      statusText.textContent = 'تم تجاوز حد الطلبات مؤقتًا. حاول بعد قليل.';
-    } else {
-      statusText.textContent = `تعذر البحث: ${error.message.replace('SPOTIFY_', 'رمز ')}`;
-    }
-  }
-}
-
-async function loadPlaylists() {
-  playlists.innerHTML = '';
-  try {
-    const data = await spotify('/me/playlists?limit=20');
-    for (const item of data.items || []) {
-      const link = document.createElement('a');
-      link.className = 'playlist-card';
-      link.href = item.external_urls?.spotify || `https://open.spotify.com/playlist/${item.id}`;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      const image = item.images?.[0]?.url || '';
-      link.innerHTML = `<img src="${image}" alt=""><div><strong></strong><span></span></div>`;
-      link.querySelector('strong').textContent = item.name;
-      const total = item.items?.total ?? item.tracks?.total ?? 0;
-      link.querySelector('span').textContent = `${total} أغنية`;
-      playlists.appendChild(link);
-    }
-  } catch (error) {
-    console.error('Spotify playlists failed:', error);
-    playlists.innerHTML = '<p class="status-text">تعذر تحديث القوائم الآن.</p>';
-  }
-}
-
-authButton.addEventListener('click', login);
-logoutButton.addEventListener('click', () => {
-  clearTokens();
-  location.reload();
-});
-searchForm.addEventListener('submit', event => {
-  event.preventDefault();
-  const query = searchInput.value.trim();
-  if (query) searchTracks(query);
-});
-refreshPlaylists.addEventListener('click', loadPlaylists);
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
-loadProfile();
+authButton.addEventListener('click',login);logoutButton.addEventListener('click',()=>{clearTokens();location.reload()});searchForm.addEventListener('submit',event=>{event.preventDefault();const query=searchInput.value.trim();if(query)searchTracks(query)});refreshPlaylists.addEventListener('click',loadPlaylists);clearHistory.addEventListener('click',()=>{searchHistory=[];localStorage.removeItem('asiri_search_history');renderHistory();updateStats()});
+renderHistory();renderFavorites();updateStats();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});loadProfile();

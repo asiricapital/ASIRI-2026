@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07110a">
+  <title>Asiri Intelligence Core</title>
+  <link rel="stylesheet" href="styles.css?v=20260802-0100">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">A</div><div><strong>Asiri Intelligence</strong><span>Core v0.1</span></div></div>
+    <nav>
+      <button class="nav active" data-page="dashboard">⌂ لوحة التحكم</button>
+      <button class="nav" data-page="projects">◫ المشاريع</button>
+      <button class="nav" data-page="tasks">✓ المهام</button>
+      <button class="nav" data-page="decisions">◆ القرارات</button>
+      <button class="nav" data-page="memory">✦ الذاكرة</button>
+      <button class="nav" data-page="search">⌕ البحث الموحد</button>
+    </nav>
+    <div class="sidebar-foot"><span>Ahmed Asiri</span><small>Workspace Owner</small></div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div><span class="eyebrow">ASIRI INTELLIGENCE PLATFORM</span><h1 id="pageTitle">لوحة التحكم</h1></div>
+      <button id="quickAdd" class="primary">＋ إضافة جديدة</button>
+    </header>
+
+    <section class="page active" data-page="dashboard">
+      <div class="hero"><div><span class="eyebrow">GOOD EVENING, AHMED</span><h2>كل مشاريعك وقراراتك في عقل واحد</h2><p>تابع العمل، احفظ الذاكرة، وابحث في كل شيء من مكان واحد.</p></div><div class="hero-orb">AI</div></div>
+      <div class="stats" id="stats"></div>
+      <div class="grid two">
+        <section class="panel"><div class="panel-head"><h3>المشاريع النشطة</h3><button data-open="projects">عرض الكل</button></div><div id="dashboardProjects"></div></section>
+        <section class="panel"><div class="panel-head"><h3>المهام القريبة</h3><button data-open="tasks">عرض الكل</button></div><div id="dashboardTasks"></div></section>
+      </div>
+      <div class="grid two">
+        <section class="panel"><div class="panel-head"><h3>آخر القرارات</h3><button data-open="decisions">عرض الكل</button></div><div id="dashboardDecisions"></div></section>
+        <section class="panel"><div class="panel-head"><h3>سجل النشاط</h3></div><div id="activityFeed"></div></section>
+      </div>
+    </section>
+
+    <section class="page" data-page="projects"><div class="section-head"><div><h2>المشاريع</h2><p>إدارة جميع الأنظمة والمبادرات من مكان واحد.</p></div><button class="primary" data-add="project">＋ مشروع جديد</button></div><div id="projectsGrid" class="cards"></div></section>
+    <section class="page" data-page="tasks"><div class="section-head"><div><h2>المهام</h2><p>الأولويات، المواعيد والحالة التنفيذية.</p></div><button class="primary" data-add="task">＋ مهمة جديدة</button></div><div class="filters"><button class="filter active" data-task-filter="all">الكل</button><button class="filter" data-task-filter="todo">جديدة</button><button class="filter" data-task-filter="doing">قيد التنفيذ</button><button class="filter" data-task-filter="done">مكتملة</button></div><div id="tasksList" class="list"></div></section>
+    <section class="page" data-page="decisions"><div class="section-head"><div><h2>القرارات</h2><p>سجل واضح للقرار، السبب، والبدائل.</p></div><button class="primary" data-add="decision">＋ قرار جديد</button></div><div id="decisionsList" class="list"></div></section>
+    <section class="page" data-page="memory"><div class="section-head"><div><h2>الذاكرة</h2><p>حقائق، ملاحظات، حلول ودروس مرتبطة بالمشاريع.</p></div><button class="primary" data-add="memory">＋ إضافة للذاكرة</button></div><div id="memoryGrid" class="cards"></div></section>
+    <section class="page" data-page="search"><div class="search-hero"><span class="eyebrow">UNIVERSAL SEARCH</span><h2>ابحث في كل شيء</h2><div class="search-box"><input id="globalSearch" placeholder="مثال: لماذا أوقفنا التشغيل داخل Safari؟"><button id="searchButton">بحث</button></div></div><div id="searchResults" class="search-results"></div></section>
+  </main>
+
+  <dialog id="modal"><form method="dialog" id="entityForm"><div class="modal-head"><h3 id="modalTitle">إضافة</h3><button value="cancel">×</button></div><div id="formFields"></div><div class="modal-actions"><button value="cancel" class="ghost">إلغاء</button><button id="saveEntity" value="default" class="primary">حفظ</button></div></form></dialog>
+  <div id="toast"></div>
+  <script src="app.js?v=20260802-0100"></script>
+</body>
+</html>

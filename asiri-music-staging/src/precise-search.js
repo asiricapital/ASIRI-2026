@@ -9,47 +9,57 @@ function waitForBridge(){
 }
 
 function normalizeArabic(value=''){
-  return value
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u064B-\u065F\u0670]/g,'')
-    .replace(/[أإآ]/g,'ا')
-    .replace(/ى/g,'ي')
-    .replace(/ة/g,'ه')
-    .replace(/ؤ/g,'و')
-    .replace(/ئ/g,'ي')
-    .replace(/[^\p{L}\p{N}]+/gu,' ')
-    .trim()
-    .replace(/\s+/g,' ');
+  return value.toLowerCase().normalize('NFKD')
+    .replace(/[\u064B-\u065F\u0670]/g,'').replace(/[أإآ]/g,'ا')
+    .replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ؤ/g,'و').replace(/ئ/g,'ي')
+    .replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
 }
 
-function looksLikeArtistOnly(query){
+function isSearchCandidate(query){
   const q=query.trim();
-  return q.length>=3 && q.length<=45 && !/[-–—:،,\/\\]/.test(q) && q.split(/\s+/).length<=4;
+  return q.length>=2 && q.length<=80 && !/[-–—:،,\/\\]/.test(q);
 }
 
 function artistMatches(track,artistName){
   const wanted=normalizeArabic(artistName);
-  return (track.artists||[]).some(artist=>{
-    const actual=normalizeArabic(artist.name||'');
-    return actual===wanted || actual.includes(wanted) || wanted.includes(actual);
-  });
+  return (track.artists||[]).some(artist=>normalizeArabic(artist.name||'')===wanted);
 }
 
-async function exactArtistTracks(bridge,query){
-  const artistsData=await bridge.api('/search?'+new URLSearchParams({q:query,type:'artist',limit:'10',offset:'0'}));
-  const candidates=artistsData.artists?.items||[];
-  const wanted=normalizeArabic(query);
-  const exact=candidates.find(artist=>normalizeArabic(artist.name)===wanted);
-  const close=exact||candidates.find(artist=>{
-    const name=normalizeArabic(artist.name);
-    return name.includes(wanted)||wanted.includes(name);
-  });
-  if(!close)return null;
+function textMatches(track,keyword){
+  if(!keyword)return true;
+  const wanted=normalizeArabic(keyword);
+  const text=normalizeArabic(`${track.name||''} ${track.album?.name||''}`);
+  return wanted.split(' ').every(word=>word.length<2||text.includes(word));
+}
 
-  const trackData=await bridge.api('/search?'+new URLSearchParams({q:`artist:"${close.name}"`,type:'track',limit:'50',offset:'0'}));
-  const strict=(trackData.tracks?.items||[]).filter(track=>artistMatches(track,close.name));
-  return {artist:close,tracks:strict};
+async function findArtistAndKeyword(bridge,query){
+  const words=query.trim().split(/\s+/).filter(Boolean);
+  for(let size=Math.min(words.length,4);size>=1;size--){
+    const candidate=words.slice(0,size).join(' ');
+    const data=await bridge.api('/search?'+new URLSearchParams({q:candidate,type:'artist',limit:'10',offset:'0'}));
+    const artists=data.artists?.items||[];
+    const wanted=normalizeArabic(candidate);
+    const exact=artists.find(artist=>normalizeArabic(artist.name||'')===wanted);
+    if(exact)return {artist:exact,keyword:words.slice(size).join(' ')};
+  }
+  return null;
+}
+
+async function fetchArtistTracks(bridge,artist,keyword){
+  const collected=[];
+  const searchText=keyword?`artist:"${artist.name}" ${keyword}`:`artist:"${artist.name}"`;
+  for(const offset of [0,10,20]){
+    const data=await bridge.api('/search?'+new URLSearchParams({q:searchText,type:'track',limit:'10',offset:String(offset)}));
+    const items=data.tracks?.items||[];
+    collected.push(...items);
+    if(items.length<10)break;
+  }
+  let strict=[...new Map(collected.filter(track=>track?.id&&artistMatches(track,artist.name)).map(track=>[track.id,track])).values()];
+  if(keyword){
+    const keywordMatches=strict.filter(track=>textMatches(track,keyword));
+    if(keywordMatches.length)strict=keywordMatches;
+  }
+  return strict;
 }
 
 function renderTrack(track,index,queue,bridge){
@@ -66,9 +76,7 @@ function renderTrack(track,index,queue,bridge){
     try{
       await bridge.activateFromGesture?.();
       await bridge.playQueue(queue,{startIndex:index,source:'precise-search',userGesture:true});
-    }catch(error){
-      bridge.setStatus(error.message||'تعذر تشغيل الأغنية.');
-    }
+    }catch(error){bridge.setStatus(error.message||'تعذر تشغيل الأغنية.');}
   });
   queueMicrotask(()=>window.dispatchEvent(new CustomEvent('asiri:track-rendered',{detail:{card,track}})));
   return fragment;
@@ -76,28 +84,26 @@ function renderTrack(track,index,queue,bridge){
 
 async function init(){
   const bridge=await waitForBridge();
-  const form=$('#searchForm');
-  form.addEventListener('submit',async event=>{
+  $('#searchForm').addEventListener('submit',async event=>{
     const query=$('#searchInput').value.trim();
-    if(!looksLikeArtistOnly(query))return;
-
+    if(!isSearchCandidate(query))return;
     event.preventDefault();
     event.stopImmediatePropagation();
     $('#results').innerHTML='';
     $('#resultCount').textContent='';
-    bridge.setStatus(`جارٍ التحقق من الفنان «${query}»…`);
-
+    bridge.setStatus(`جارٍ تحليل البحث «${query}»…`);
     try{
-      const result=await exactArtistTracks(bridge,query);
-      if(!result?.tracks?.length){
-        bridge.setStatus('لم أجد فنانًا مطابقًا بدقة. جرّب كتابة اسم الفنان كاملًا.');
+      const parsed=await findArtistAndKeyword(bridge,query);
+      if(!parsed){bridge.setStatus('لم أجد فنانًا مطابقًا. جرّب كتابة اسم الفنان ثم اسم الأغنية.');return;}
+      const queue=await fetchArtistTracks(bridge,parsed.artist,parsed.keyword);
+      if(!queue.length){
+        bridge.setStatus(parsed.keyword?`لم أجد «${parsed.keyword}» ضمن أغاني ${parsed.artist.name}.`:`لم أجد أغاني للفنان ${parsed.artist.name}.`);
         return;
       }
-      const queue=result.tracks;
       bridge.replaceQueue(queue,{startIndex:0,source:'precise-artist-search'});
       queue.forEach((track,index)=>$('#results').appendChild(renderTrack(track,index,queue,bridge)));
       $('#resultCount').textContent=`${queue.length} نتيجة دقيقة`;
-      bridge.setStatus(`تم عرض أغاني ${result.artist.name} فقط ✓`);
+      bridge.setStatus(parsed.keyword?`نتائج ${parsed.artist.name} المطابقة لـ «${parsed.keyword}» فقط ✓`:`تم عرض أغاني ${parsed.artist.name} فقط ✓`);
     }catch(error){
       console.error('[Precise Search]',error);
       bridge.setStatus(error.message==='AUTH_REQUIRED'?'سجّل الدخول أولًا.':error.message||'تعذر تنفيذ البحث الدقيق.');

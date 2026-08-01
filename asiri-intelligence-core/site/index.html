@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08111f">
+  <title>Asiri Intelligence Core</title>
+  <link rel="stylesheet" href="styles.css?v=20260802-0100">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="logo">AI</div><div><h1>Asiri Intelligence</h1><span>Core v0.1</span></div></div>
+      <nav>
+        <button class="nav-btn active" data-view="dashboard">⌂ <span>الرئيسية</span></button>
+        <button class="nav-btn" data-view="projects">◫ <span>المشاريع</span></button>
+        <button class="nav-btn" data-view="tasks">✓ <span>المهام</span></button>
+        <button class="nav-btn" data-view="decisions">◆ <span>القرارات</span></button>
+        <button class="nav-btn" data-view="memory">◉ <span>الذاكرة</span></button>
+        <button class="nav-btn" data-view="activity">↻ <span>سجل النشاط</span></button>
+      </nav>
+      <div class="sidebar-foot"><span>بيئة العرض</span><strong>Prototype Live</strong></div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div><p class="eyebrow">ASIRI INTELLIGENCE PLATFORM</p><h2 id="pageTitle">لوحة القيادة</h2></div>
+        <div class="top-actions"><button id="globalSearchButton" class="ghost">⌕ بحث موحد</button><button id="newItemButton" class="primary">＋ إضافة جديدة</button></div>
+      </header>
+
+      <section class="view active" data-view-panel="dashboard">
+        <div class="hero"><div><span class="eyebrow">PERSONAL INTELLIGENCE OS</span><h3>مساء الخير أحمد</h3><p>مشاريعك وقراراتك ومهامك وذاكرتك في نظام واحد.</p></div><div class="hero-badge"><strong id="healthScore">92%</strong><span>جاهزية النواة</span></div></div>
+        <div id="statsGrid" class="stats-grid"></div>
+        <div class="two-col">
+          <section class="panel"><div class="panel-head"><div><h3>المشاريع النشطة</h3><p>صورة تنفيذية مختصرة</p></div><button data-go="projects">عرض الكل</button></div><div id="activeProjects" class="project-list"></div></section>
+          <section class="panel"><div class="panel-head"><div><h3>أهم المهام</h3><p>الأولوية والموعد القادم</p></div><button data-go="tasks">إدارة</button></div><div id="priorityTasks" class="compact-list"></div></section>
+        </div>
+        <div class="two-col">
+          <section class="panel"><div class="panel-head"><div><h3>آخر القرارات</h3><p>المبررات والحلول المعتمدة</p></div><button data-go="decisions">فتح السجل</button></div><div id="recentDecisions" class="compact-list"></div></section>
+          <section class="panel"><div class="panel-head"><div><h3>الذاكرة الذكية</h3><p>أحدث المعلومات المحفوظة</p></div><button data-go="memory">فتح الذاكرة</button></div><div id="recentMemories" class="compact-list"></div></section>
+        </div>
+      </section>
+
+      <section class="view" data-view-panel="projects"><div class="section-toolbar"><div><h3>المشاريع</h3><p>إدارة جميع أنظمة Asiri من مكان واحد.</p></div><button class="primary" data-create="project">＋ مشروع جديد</button></div><div id="projectsGrid" class="cards-grid"></div></section>
+      <section class="view" data-view-panel="tasks"><div class="section-toolbar"><div><h3>المهام</h3><p>متابعة التنفيذ حسب الأولوية والحالة.</p></div><button class="primary" data-create="task">＋ مهمة جديدة</button></div><div class="filter-row"><button class="filter active" data-task-filter="all">الكل</button><button class="filter" data-task-filter="todo">جديدة</button><button class="filter" data-task-filter="in_progress">قيد التنفيذ</button><button class="filter" data-task-filter="done">مكتملة</button></div><div id="tasksTable" class="table-wrap"></div></section>
+      <section class="view" data-view-panel="decisions"><div class="section-toolbar"><div><h3>سجل القرارات</h3><p>ماذا قررنا؟ ولماذا؟ وما البديل؟</p></div><button class="primary" data-create="decision">＋ قرار جديد</button></div><div id="decisionsList" class="timeline"></div></section>
+      <section class="view" data-view-panel="memory"><div class="section-toolbar"><div><h3>الذاكرة</h3><p>معلومات منظمة قابلة للبحث والاسترجاع.</p></div><button class="primary" data-create="memory">＋ إضافة للذاكرة</button></div><div class="search-box"><input id="memorySearch" placeholder="ابحث في الذاكرة والقرارات والمهام..."><span>⌕</span></div><div id="memoryGrid" class="cards-grid"></div></section>
+      <section class="view" data-view-panel="activity"><div class="section-toolbar"><div><h3>سجل النشاط</h3><p>كل تغيير مهم في النواة.</p></div></div><div id="activityList" class="timeline"></div></section>
+    </main>
+  </div>
+
+  <dialog id="modal"><form method="dialog" id="modalForm"><div class="modal-head"><div><span class="eyebrow">ASIRI CORE</span><h3 id="modalTitle">إضافة جديدة</h3></div><button value="cancel" class="icon-btn">✕</button></div><div id="modalFields" class="form-grid"></div><div class="modal-actions"><button value="cancel" class="ghost">إلغاء</button><button id="saveModal" value="default" class="primary">حفظ</button></div></form></dialog>
+  <dialog id="searchModal"><div class="modal-head"><div><span class="eyebrow">UNIVERSAL SEARCH</span><h3>البحث الموحد</h3></div><button class="icon-btn" onclick="this.closest('dialog').close()">✕</button></div><div class="search-box"><input id="globalSearch" placeholder="مثال: لماذا أوقفنا التشغيل داخل Safari؟" autofocus><span>⌕</span></div><div id="searchResults" class="search-results"></div></dialog>
+
+  <script src="app.js?v=20260802-0100"></script>
+</body>
+</html>

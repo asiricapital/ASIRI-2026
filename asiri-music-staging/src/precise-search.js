@@ -15,56 +15,66 @@ function normalizeArabic(value=''){
     .replace(/[^\p{L}\p{N}]+/gu,' ').trim().replace(/\s+/g,' ');
 }
 
-function isSearchCandidate(query){
-  const q=query.trim();
-  return q.length>=2 && q.length<=80 && !/[-–—:،,\/\\]/.test(q);
+const FILLER_WORDS=new Set(['اجمل','افضل','اشهر','اغاني','اغنيه','اغنيات','اعمال','الفنان','للفنان','من','لي','ابغى','اريد','شغل','شغللي','تشغيل','كل']);
+function cleanKeyword(value=''){
+  const words=normalizeArabic(value).split(' ').filter(Boolean).filter(word=>!FILLER_WORDS.has(word));
+  return words.map(word=>word==='موالات'?'موال':word).join(' ').trim();
+}
+function isSearchCandidate(query){const q=query.trim();return q.length>=2&&q.length<=100&&!/[-–—:،,\/\\]/.test(q)}
+function artistMatches(track,artistName){const wanted=normalizeArabic(artistName);return(track.artists||[]).some(artist=>normalizeArabic(artist.name||'')===wanted)}
+function trackText(track){return normalizeArabic(`${track.name||''} ${track.album?.name||''}`)}
+function keywordScore(track,keyword){if(!keyword)return 0;const text=trackText(track),words=cleanKeyword(keyword).split(' ').filter(Boolean);let score=0;for(const word of words){if(text.includes(word))score+=20;if(word==='موال'&&/(موال|موالات|جلسه|جلسات|عود)/.test(text))score+=15}return score}
+
+async function searchArtists(bridge,candidate){
+  const data=await bridge.api('/search?'+new URLSearchParams({q:candidate,type:'artist',limit:'10',offset:'0'}));
+  const wanted=normalizeArabic(candidate);
+  return(data.artists?.items||[]).find(artist=>normalizeArabic(artist.name||'')===wanted)||null;
 }
 
-function artistMatches(track,artistName){
-  const wanted=normalizeArabic(artistName);
-  return (track.artists||[]).some(artist=>normalizeArabic(artist.name||'')===wanted);
-}
-
-function textMatches(track,keyword){
-  if(!keyword)return true;
-  const wanted=normalizeArabic(keyword);
-  const text=normalizeArabic(`${track.name||''} ${track.album?.name||''}`);
-  return wanted.split(' ').every(word=>word.length<2||text.includes(word));
-}
-
-async function findArtistAndKeyword(bridge,query){
+async function findArtistAnywhere(bridge,query){
   const words=query.trim().split(/\s+/).filter(Boolean);
-  for(let size=Math.min(words.length,4);size>=1;size--){
-    const candidate=words.slice(0,size).join(' ');
-    const data=await bridge.api('/search?'+new URLSearchParams({q:candidate,type:'artist',limit:'10',offset:'0'}));
-    const artists=data.artists?.items||[];
-    const wanted=normalizeArabic(candidate);
-    const exact=artists.find(artist=>normalizeArabic(artist.name||'')===wanted);
-    if(exact)return {artist:exact,keyword:words.slice(size).join(' ')};
+  const spans=[];
+  for(let size=Math.min(4,words.length);size>=1;size--){
+    for(let start=0;start<=words.length-size;start++)spans.push({start,size,text:words.slice(start,start+size).join(' ')});
+  }
+  for(const span of spans){
+    const artist=await searchArtists(bridge,span.text);
+    if(artist){
+      const remainder=[...words.slice(0,span.start),...words.slice(span.start+span.size)].join(' ');
+      return{artist,keyword:cleanKeyword(remainder)};
+    }
   }
   return null;
 }
 
-async function fetchArtistTracks(bridge,artist,keyword){
-  const collected=[];
-  const searchText=keyword?`artist:"${artist.name}" ${keyword}`:`artist:"${artist.name}"`;
-  for(const offset of [0,10,20]){
-    const data=await bridge.api('/search?'+new URLSearchParams({q:searchText,type:'track',limit:'10',offset:String(offset)}));
-    const items=data.tracks?.items||[];
-    collected.push(...items);
+async function pagedTrackSearch(bridge,q,pages=3){
+  const all=[];
+  for(let page=0;page<pages;page++){
+    const items=(await bridge.api('/search?'+new URLSearchParams({q,type:'track',limit:'10',offset:String(page*10)}))).tracks?.items||[];
+    all.push(...items);
     if(items.length<10)break;
   }
-  let strict=[...new Map(collected.filter(track=>track?.id&&artistMatches(track,artist.name)).map(track=>[track.id,track])).values()];
+  return all;
+}
+
+async function fetchArtistTracks(bridge,artist,keyword,originalQuery){
+  const queries=[];
   if(keyword){
-    const keywordMatches=strict.filter(track=>textMatches(track,keyword));
-    if(keywordMatches.length)strict=keywordMatches;
+    queries.push(`${artist.name} ${keyword}`);
+    queries.push(`artist:"${artist.name}" ${keyword}`);
+    if(keyword.includes('موال'))queries.push(`${artist.name} موالات جلسات عود`);
   }
-  return strict;
+  queries.push(`artist:"${artist.name}"`);
+  queries.push(originalQuery);
+  const collected=[];
+  for(const q of [...new Set(queries)])collected.push(...await pagedTrackSearch(bridge,q,2));
+  const strict=[...new Map(collected.filter(track=>track?.id&&artistMatches(track,artist.name)).map(track=>[track.id,track])).values()];
+  strict.sort((a,b)=>keywordScore(b,keyword)-keywordScore(a,keyword)||(b.popularity||0)-(a.popularity||0));
+  return strict.slice(0,30);
 }
 
 function renderTrack(track,index,queue,bridge){
-  const fragment=$('#trackTemplate').content.cloneNode(true);
-  const card=fragment.querySelector('.track');
+  const fragment=$('#trackTemplate').content.cloneNode(true),card=fragment.querySelector('.track');
   card.dataset.trackId=track.id||'';
   fragment.querySelector('.cover').src=track.album?.images?.[0]?.url||'';
   fragment.querySelector('.name').textContent=track.name||'';
@@ -73,10 +83,8 @@ function renderTrack(track,index,queue,bridge){
   fragment.querySelector('.open').href=track.external_urls?.spotify||'';
   fragment.querySelector('.play').addEventListener('click',async event=>{
     event.preventDefault();
-    try{
-      await bridge.activateFromGesture?.();
-      await bridge.playQueue(queue,{startIndex:index,source:'precise-search',userGesture:true});
-    }catch(error){bridge.setStatus(error.message||'تعذر تشغيل الأغنية.');}
+    try{await bridge.activateFromGesture?.();await bridge.playQueue(queue,{startIndex:index,source:'precise-search',userGesture:true})}
+    catch(error){bridge.setStatus(error.message||'تعذر تشغيل الأغنية.')}
   });
   queueMicrotask(()=>window.dispatchEvent(new CustomEvent('asiri:track-rendered',{detail:{card,track}})));
   return fragment;
@@ -85,30 +93,22 @@ function renderTrack(track,index,queue,bridge){
 async function init(){
   const bridge=await waitForBridge();
   $('#searchForm').addEventListener('submit',async event=>{
-    const query=$('#searchInput').value.trim();
-    if(!isSearchCandidate(query))return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    $('#results').innerHTML='';
-    $('#resultCount').textContent='';
-    bridge.setStatus(`جارٍ تحليل البحث «${query}»…`);
+    const query=$('#searchInput').value.trim();if(!isSearchCandidate(query))return;
+    event.preventDefault();event.stopImmediatePropagation();$('#results').innerHTML='';$('#resultCount').textContent='';
+    bridge.setStatus(`جارٍ فهم طلبك «${query}»…`);
     try{
-      const parsed=await findArtistAndKeyword(bridge,query);
-      if(!parsed){bridge.setStatus('لم أجد فنانًا مطابقًا. جرّب كتابة اسم الفنان ثم اسم الأغنية.');return;}
-      const queue=await fetchArtistTracks(bridge,parsed.artist,parsed.keyword);
-      if(!queue.length){
-        bridge.setStatus(parsed.keyword?`لم أجد «${parsed.keyword}» ضمن أغاني ${parsed.artist.name}.`:`لم أجد أغاني للفنان ${parsed.artist.name}.`);
-        return;
-      }
+      const parsed=await findArtistAnywhere(bridge,query);
+      if(!parsed){bridge.setStatus('لم أتعرف على اسم الفنان داخل العبارة. اكتب اسم الفنان بوضوح.');return}
+      const queue=await fetchArtistTracks(bridge,parsed.artist,parsed.keyword,query);
+      if(!queue.length){bridge.setStatus(`لم يعثر Spotify على أعمال متاحة للفنان ${parsed.artist.name} في حسابك الحالي.`);return}
       bridge.replaceQueue(queue,{startIndex:0,source:'precise-artist-search'});
       queue.forEach((track,index)=>$('#results').appendChild(renderTrack(track,index,queue,bridge)));
-      $('#resultCount').textContent=`${queue.length} نتيجة دقيقة`;
-      bridge.setStatus(parsed.keyword?`نتائج ${parsed.artist.name} المطابقة لـ «${parsed.keyword}» فقط ✓`:`تم عرض أغاني ${parsed.artist.name} فقط ✓`);
-    }catch(error){
-      console.error('[Precise Search]',error);
-      bridge.setStatus(error.message==='AUTH_REQUIRED'?'سجّل الدخول أولًا.':error.message||'تعذر تنفيذ البحث الدقيق.');
-    }
+      $('#resultCount').textContent=`${queue.length} نتيجة`;
+      const matched=parsed.keyword?queue.filter(track=>keywordScore(track,parsed.keyword)>0).length:queue.length;
+      bridge.setStatus(parsed.keyword&&matched===0
+        ?`تعرفت على الفنان ${parsed.artist.name}، لكن Spotify لا يضع وصف «${parsed.keyword}» في بيانات الأغاني؛ عرضت أقرب أعماله المتاحة.`
+        :parsed.keyword?`تم فهم الطلب: ${parsed.artist.name} + «${parsed.keyword}» ✓`:`تم عرض أغاني ${parsed.artist.name} فقط ✓`);
+    }catch(error){console.error('[Precise Search]',error);bridge.setStatus(error.message==='AUTH_REQUIRED'?'سجّل الدخول أولًا.':error.message||'تعذر تنفيذ البحث.')}
   },true);
 }
-
 init().catch(error=>console.error('[Precise Search isolated]',error));

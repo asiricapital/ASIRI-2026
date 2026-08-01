@@ -1,3 +1,5 @@
+import './native-playback.js?v=20260801-2305';
+
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const STORAGE_KEY='asiri-music-os.activePage';

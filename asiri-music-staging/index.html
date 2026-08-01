@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07110a">
   <title>Asiri Music Professional</title>
-  <link rel="stylesheet" href="styles.css?v=20260801-1425">
-  <link rel="stylesheet" href="session-controls.css?v=20260801-1425">
+  <link rel="stylesheet" href="styles.css?v=20260801-1430">
+  <link rel="stylesheet" href="session-controls.css?v=20260801-1430">
 </head>
 <body>
   <main class="shell">
@@ -21,14 +21,14 @@
       <p id="aiDjStatus" class="muted">اكتب طلبك أو اختر جلسة جاهزة.</p><div id="aiDjPreview" class="ai-dj-preview"></div><button id="aiDjPlay" class="ai-dj-play" type="button">▶ تشغيل الجلسة من البداية</button>
     </section>
     <section id="tasteDashboard" class="card taste-dashboard"><div class="taste-head"><div><span class="eyebrow">TASTE ENGINE</span><h2>ملف ذوق أحمد</h2></div><div class="taste-score"><strong id="tasteScore">0</strong><span>/100</span></div></div><p id="tasteSummary" class="muted">ابدأ بتقييم الأغاني حتى يتعلم التطبيق ذوقك.</p><div class="taste-stats"><article><span>أعجبتني</span><strong id="tasteLikes">0</strong></article><article><span>مستبعدة</span><strong id="tasteDislikes">0</strong></article><article><span>فنانون معروفون</span><strong id="tasteArtists">0</strong></article></div><div class="taste-top"><h3>الفنانون الأقرب لذوقك</h3><div id="tasteTopArtists"></div></div></section>
-    <section class="card hero"><div><span class="eyebrow">Spotify Engine</span><h2>بحث وتشغيل بمعمارية مستقرة</h2><p>اكتب اسم الفنان فقط لعرض أغانيه بدقة، أو اكتب اسم الأغنية والفنان للبحث العام.</p></div><form id="searchForm"><input id="searchInput" placeholder="محمد عبده أو محمد عبده - الأماكن"><button>بحث</button></form><p id="statusText">سجّل الدخول للبدء.</p></section>
+    <section class="card hero"><div><span class="eyebrow">Spotify Engine</span><h2>بحث وتشغيل بمعمارية مستقرة</h2><p>اكتب اسم الفنان فقط، أو اسم الفنان ثم كلمة من الأغنية مثل: محمد عبده موال.</p></div><form id="searchForm"><input id="searchInput" placeholder="محمد عبده أو محمد عبده موال"><button>بحث</button></form><p id="statusText">سجّل الدخول للبدء.</p></section>
     <section><div class="section-head"><h2>النتائج</h2><span id="resultCount"></span></div><div id="results" class="grid"></div></section>
   </main>
   <aside id="playerBar" class="player hidden"><img id="playerCover" alt=""><div><strong id="playerTitle">اختر أغنية</strong><span id="playerArtist"></span></div><button id="prevButton" type="button">⏮</button><button id="playButton" type="button">▶</button><button id="nextButton" type="button">⏭</button></aside>
   <template id="trackTemplate"><article class="track"><img class="cover" alt=""><div><strong class="name"></strong><span class="artist"></span><small class="album"></small></div><button class="play" type="button">▶ تشغيل</button><a class="open" target="_blank" rel="noopener">Spotify</a></article></template>
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
-  <script type="module" src="src/taste-engine.js?v=20260801-1425"></script>
-  <script type="module" src="src/app.js?v=20260801-1425"></script>
-  <script type="module" src="src/precise-search.js?v=20260801-1425"></script>
-  <script type="module" src="src/ai-dj.js?v=20260801-1425"></script>
+  <script type="module" src="src/taste-engine.js?v=20260801-1430"></script>
+  <script type="module" src="src/app.js?v=20260801-1430"></script>
+  <script type="module" src="src/precise-search.js?v=20260801-1430"></script>
+  <script type="module" src="src/ai-dj.js?v=20260801-1430"></script>
 </body></html>

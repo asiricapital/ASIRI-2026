@@ -5,108 +5,35 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07110a">
   <title>Asiri Music OS</title>
-  <link rel="stylesheet" href="styles.css?v=20260801-2245">
-  <link rel="stylesheet" href="session-controls.css?v=20260801-2245">
-  <link rel="stylesheet" href="car-connect.css?v=20260801-2245">
-  <link rel="stylesheet" href="os-shell.css?v=20260801-2245">
+  <link rel="stylesheet" href="styles.css?v=20260801-2345">
+  <link rel="stylesheet" href="session-controls.css?v=20260801-2345">
+  <link rel="stylesheet" href="car-connect.css?v=20260801-2345">
+  <link rel="stylesheet" href="os-shell.css?v=20260801-2345">
   <style>.car-native-card button{width:100%;border:0;border-radius:18px;background:#1ed760;color:#041006;font-weight:900;padding:15px 18px;font-size:16px}.car-native-card button:disabled{opacity:.55}</style>
 </head>
 <body>
   <main class="shell">
-    <header class="os-header">
-      <div class="os-brand"><div class="os-logo">A</div><div><h1>Asiri Music OS</h1><small>منصتك الموسيقية الذكية</small></div></div>
-      <button id="loginButton">الدخول عبر Spotify</button>
-    </header>
-
-    <section class="os-page is-active" data-os-page="home">
-      <div class="os-hero">
-        <span class="eyebrow">ASIRI INTELLIGENCE</span>
-        <h2 id="osGreeting">مرحبًا أحمد</h2>
-        <p>كل ما تحتاجه للاستماع، الجلسات الذكية، والقيادة في مكان واحد.</p>
-      </div>
-      <div class="os-quick-grid">
-        <button class="os-quick" data-open-page="sessions"><span>✨</span>إنشاء جلسة ذكية</button>
-        <button class="os-quick" data-open-page="search"><span>⌕</span>بحث موسيقي</button>
-        <button class="os-quick" data-open-page="car"><span>🚗</span>تجهيز جلسة السيارة</button>
-        <button class="os-quick" data-open-page="library"><span>♥</span>مكتبتي</button>
-      </div>
-      <div class="os-panel">
-        <div class="os-panel-head"><h3>ملخصك الموسيقي</h3><span class="eyebrow">LIVE PROFILE</span></div>
-        <div class="os-dashboard-grid">
-          <article class="os-stat"><span>الأغاني المعجبة</span><strong id="osLikeCount">0</strong></article>
-          <article class="os-stat"><span>فنانون مفضلون</span><strong id="osArtistCount">0</strong></article>
-          <article class="os-stat"><span>أغاني آخر جلسة</span><strong id="osSessionCount">0</strong></article>
-          <article id="osLastSession" class="os-stat"><span>آخر جلسة</span><strong>لا توجد</strong></article>
-        </div>
-      </div>
-      <div id="homeMount"></div>
-    </section>
-
-    <section class="os-page" data-os-page="search">
-      <div class="os-section-title"><div><h2>البحث الذكي</h2><p>ابحث باسم الفنان أو اكتب طلبك بصورة طبيعية.</p></div><span>⌕</span></div>
-      <div id="searchMount">
-        <section id="searchModule" class="card hero"><div><span class="eyebrow">SMART SEARCH</span><h2>ابحث بطريقتك</h2><p>مثال: أجمل موالات محمد عبده، أو اسم الفنان فقط.</p></div><form id="searchForm"><input id="searchInput" placeholder="أجمل موالات محمد عبده"><button>بحث</button></form><p id="statusText">سجّل الدخول للبدء.</p></section>
-        <section id="resultsModule"><div class="section-head"><h2>النتائج</h2><span id="resultCount"></span></div><div id="results" class="grid"></div></section>
-      </div>
-    </section>
-
-    <section class="os-page" data-os-page="sessions">
-      <div class="os-section-title"><div><h2>الجلسات</h2><p>أنشئ جلسة، عدّل ترتيبها، ثم افتحها في Spotify.</p></div><span>✨</span></div>
-      <div id="sessionsMount">
-        <section id="aiDjCard" class="card ai-dj-card">
-          <div class="section-head"><div><span class="eyebrow">ASIRI AI DJ</span><h2>اصنع جلستك بالكلمات</h2></div><span id="aiDjCount"></span></div>
-          <p class="muted">اكتب الجو الذي تريده وسيجمع AI DJ جلسة مرتبة حسب طلبك وملف ذوقك.</p>
-          <div class="ai-dj-form"><input id="aiDjPrompt" placeholder="مثال: رحلة ليلية بطرب خليجي هادئ"><button id="aiDjGenerate" type="button">✨ إنشاء الجلسة</button></div>
-          <div class="ai-presets"><button type="button" data-ai-preset="جلسة قهوة خليجية هادئة">☕ قهوة</button><button type="button" data-ai-preset="رحلة ليلية وطريق طويل">🚗 سفر</button><button type="button" data-ai-preset="طرب سعودي قديم">🎻 طرب</button><button type="button" data-ai-preset="أغاني خليجية حماسية">🔥 حماس</button></div>
-          <p id="aiDjStatus" class="muted">اكتب طلبك أو اختر جلسة جاهزة.</p><div id="aiDjPreview" class="ai-dj-preview"></div><button id="aiDjPlay" class="ai-dj-play" type="button">▶ تشغيل الجلسة من البداية</button>
-        </section>
-      </div>
-    </section>
-
-    <section class="os-page" data-os-page="library">
-      <div class="os-section-title"><div><h2>مكتبتي</h2><p>المفضلة، الجلسات المحفوظة، والفنانون الأقرب لذوقك.</p></div><span>♥</span></div>
-      <div class="os-panel"><div class="os-panel-head"><h3>الجلسات المحفوظة</h3><span>قريبًا</span></div><div class="os-empty">في المرحلة التالية ستظهر هنا جميع جلساتك مع الحفظ، التسمية، التعديل والمشاركة.</div></div>
-      <div class="os-panel"><div class="os-panel-head"><h3>الأغاني المفضلة</h3><span id="libraryLikesLabel">تتزامن مع ملف الذوق</span></div><div class="os-empty">تظهر اختياراتك حاليًا داخل ملف الذوق، وسيتم تحويلها إلى مكتبة كاملة في المرحلة الثانية.</div></div>
-    </section>
-
-    <section class="os-page" data-os-page="car">
-      <div class="os-section-title"><div><h2>وضع السيارة</h2><p>جهّز القائمة وافتحها في Spotify للتحكم من أزرار السيارة.</p></div><span>🚗</span></div>
-      <div class="os-panel"><div class="os-panel-head"><h3>مسار التشغيل الموثوق</h3><span class="eyebrow">SPOTIFY NATIVE</span></div><p class="muted">أنشئ الجلسة أولًا، ثم صدّرها إلى Spotify وشغّلها من التطبيق الأصلي.</p></div>
-      <div id="carMount"></div>
-    </section>
-
-    <section class="os-page" data-os-page="settings">
-      <div class="os-section-title"><div><h2>الإعدادات</h2><p>حالة النظام والحساب والإصدار.</p></div><span>⚙</span></div>
-      <div id="settingsMount" class="os-settings-list">
-        <div class="os-setting"><div><strong>بيئة التشغيل</strong><span>نسخة الاختبار الاحترافية</span></div><b>Staging</b></div>
-        <div class="os-setting"><div><strong>إصدار النظام</strong><span>Asiri Music OS — Phase 1</span></div><b>1.0</b></div>
-        <div class="os-setting"><div><strong>حفظ البيانات</strong><span>محلي على هذا الجهاز حاليًا</span></div><b>Local</b></div>
-      </div>
-    </section>
-
+    <header class="os-header"><div class="os-brand"><div class="os-logo">A</div><div><h1>Asiri Music OS</h1><small>منصتك الموسيقية الذكية</small></div></div><button id="loginButton">الدخول عبر Spotify</button></header>
+    <section class="os-page is-active" data-os-page="home"><div class="os-hero"><span class="eyebrow">ASIRI INTELLIGENCE</span><h2 id="osGreeting">مرحبًا أحمد</h2><p>كل ما تحتاجه للاستماع، الجلسات الذكية، والقيادة في مكان واحد.</p></div><div class="os-quick-grid"><button class="os-quick" data-open-page="sessions"><span>✨</span>إنشاء جلسة ذكية</button><button class="os-quick" data-open-page="search"><span>⌕</span>بحث موسيقي</button><button class="os-quick" data-open-page="car"><span>🚗</span>تجهيز جلسة السيارة</button><button class="os-quick" data-open-page="library"><span>♥</span>مكتبتي</button></div><div class="os-panel"><div class="os-panel-head"><h3>ملخصك الموسيقي</h3><span class="eyebrow">LIVE PROFILE</span></div><div class="os-dashboard-grid"><article class="os-stat"><span>الأغاني المعجبة</span><strong id="osLikeCount">0</strong></article><article class="os-stat"><span>فنانون مفضلون</span><strong id="osArtistCount">0</strong></article><article class="os-stat"><span>أغاني آخر جلسة</span><strong id="osSessionCount">0</strong></article><article id="osLastSession" class="os-stat"><span>آخر جلسة</span><strong>لا توجد</strong></article></div></div><div id="homeMount"></div></section>
+    <section class="os-page" data-os-page="search"><div class="os-section-title"><div><h2>البحث الذكي</h2><p>ابحث باسم الفنان أو اكتب طلبك بصورة طبيعية.</p></div><span>⌕</span></div><div id="searchMount"><section id="searchModule" class="card hero"><div><span class="eyebrow">SMART SEARCH</span><h2>ابحث بطريقتك</h2><p>مثال: أجمل موالات محمد عبده، أو اسم الفنان فقط.</p></div><form id="searchForm"><input id="searchInput" placeholder="أجمل موالات محمد عبده"><button>بحث</button></form><p id="statusText">سجّل الدخول للبدء.</p></section><section id="resultsModule"><div class="section-head"><h2>النتائج</h2><span id="resultCount"></span></div><div id="results" class="grid"></div></section></div></section>
+    <section class="os-page" data-os-page="sessions"><div class="os-section-title"><div><h2>الجلسات</h2><p>أنشئ جلسة، عدّل ترتيبها، ثم شغّلها داخل الموقع أو افتحها في Spotify.</p></div><span>✨</span></div><div id="sessionsMount"><section id="aiDjCard" class="card ai-dj-card"><div class="section-head"><div><span class="eyebrow">ASIRI AI DJ</span><h2>اصنع جلستك بالكلمات</h2></div><span id="aiDjCount"></span></div><p class="muted">اكتب الجو الذي تريده وسيجمع AI DJ جلسة مرتبة حسب طلبك وملف ذوقك.</p><div class="ai-dj-form"><input id="aiDjPrompt" placeholder="مثال: رحلة ليلية بطرب خليجي هادئ"><button id="aiDjGenerate" type="button">✨ إنشاء الجلسة</button></div><div class="ai-presets"><button type="button" data-ai-preset="جلسة قهوة خليجية هادئة">☕ قهوة</button><button type="button" data-ai-preset="رحلة ليلية وطريق طويل">🚗 سفر</button><button type="button" data-ai-preset="طرب سعودي قديم">🎻 طرب</button><button type="button" data-ai-preset="أغاني خليجية حماسية">🔥 حماس</button></div><p id="aiDjStatus" class="muted">اكتب طلبك أو اختر جلسة جاهزة.</p><div id="aiDjPreview" class="ai-dj-preview"></div><button id="aiDjPlay" class="ai-dj-play" type="button">▶ تشغيل الجلسة من البداية</button></section></div></section>
+    <section class="os-page" data-os-page="library"><div class="os-section-title"><div><h2>مكتبتي</h2><p>المفضلة، الجلسات المحفوظة، والفنانون الأقرب لذوقك.</p></div><span>♥</span></div><div class="os-panel"><div class="os-panel-head"><h3>الجلسات المحفوظة</h3><span>قريبًا</span></div><div class="os-empty">في المرحلة التالية ستظهر هنا جميع جلساتك مع الحفظ، التسمية، التعديل والمشاركة.</div></div><div class="os-panel"><div class="os-panel-head"><h3>الأغاني المفضلة</h3><span id="libraryLikesLabel">تتزامن مع ملف الذوق</span></div><div class="os-empty">تظهر اختياراتك حاليًا داخل ملف الذوق، وسيتم تحويلها إلى مكتبة كاملة في المرحلة الثانية.</div></div></section>
+    <section class="os-page" data-os-page="car"><div class="os-section-title"><div><h2>وضع السيارة</h2><p>جهّز القائمة وافتحها في Spotify للتحكم من أزرار السيارة.</p></div><span>🚗</span></div><div class="os-panel"><div class="os-panel-head"><h3>مسار التشغيل الموثوق</h3><span class="eyebrow">SPOTIFY NATIVE</span></div><p class="muted">أنشئ الجلسة أولًا، ثم صدّرها إلى Spotify وشغّلها من التطبيق الأصلي.</p></div><div id="carMount"></div></section>
+    <section class="os-page" data-os-page="settings"><div class="os-section-title"><div><h2>الإعدادات</h2><p>حالة النظام والحساب والإصدار.</p></div><span>⚙</span></div><div id="settingsMount" class="os-settings-list"><div class="os-setting"><div><strong>بيئة التشغيل</strong><span>نسخة الاختبار الاحترافية</span></div><b>Staging</b></div><div class="os-setting"><div><strong>إصدار النظام</strong><span>Asiri Playback Engine v2</span></div><b>2.0</b></div><div class="os-setting"><div><strong>حفظ البيانات</strong><span>محلي على هذا الجهاز حاليًا</span></div><b>Local</b></div></div></section>
     <section id="healthCard" class="card health-card"><div><span class="eyebrow">System Health</span><h2>حالة النظام</h2></div><strong id="healthStatus">جارٍ الفحص…</strong></section>
     <section id="profileCard" class="card hidden"><strong id="profileName"></strong><span id="profilePlan"></span></section>
     <section id="tasteDashboard" class="card taste-dashboard"><div class="taste-head"><div><span class="eyebrow">TASTE ENGINE</span><h2>ملف ذوق أحمد</h2></div><div class="taste-score"><strong id="tasteScore">0</strong><span>/100</span></div></div><p id="tasteSummary" class="muted">ابدأ بتقييم الأغاني حتى يتعلم التطبيق ذوقك.</p><div class="taste-stats"><article><span>أعجبتني</span><strong id="tasteLikes">0</strong></article><article><span>مستبعدة</span><strong id="tasteDislikes">0</strong></article><article><span>فنانون معروفون</span><strong id="tasteArtists">0</strong></article></div><div class="taste-top"><h3>الفنانون الأقرب لذوقك</h3><div id="tasteTopArtists"></div></div></section>
   </main>
-
-  <nav class="os-bottom-nav" aria-label="التنقل الرئيسي">
-    <button class="os-nav-button is-active" data-os-target="home"><b>⌂</b>الرئيسية</button>
-    <button class="os-nav-button" data-os-target="search"><b>⌕</b>البحث</button>
-    <button class="os-nav-button" data-os-target="sessions"><b>✨</b>الجلسات</button>
-    <button class="os-nav-button" data-os-target="library"><b>♥</b>المكتبة</button>
-    <button class="os-nav-button" data-os-target="car"><b>🚗</b>السيارة</button>
-    <button class="os-nav-button" data-os-target="settings"><b>⚙</b>الإعدادات</button>
-  </nav>
-
+  <nav class="os-bottom-nav" aria-label="التنقل الرئيسي"><button class="os-nav-button is-active" data-os-target="home"><b>⌂</b>الرئيسية</button><button class="os-nav-button" data-os-target="search"><b>⌕</b>البحث</button><button class="os-nav-button" data-os-target="sessions"><b>✨</b>الجلسات</button><button class="os-nav-button" data-os-target="library"><b>♥</b>المكتبة</button><button class="os-nav-button" data-os-target="car"><b>🚗</b>السيارة</button><button class="os-nav-button" data-os-target="settings"><b>⚙</b>الإعدادات</button></nav>
   <aside id="playerBar" class="player hidden"><img id="playerCover" alt=""><div><strong id="playerTitle">اختر أغنية</strong><span id="playerArtist"></span></div><button id="prevButton" type="button">⏮</button><button id="playButton" type="button">▶</button><button id="nextButton" type="button">⏭</button></aside>
-  <template id="trackTemplate"><article class="track"><img class="cover" alt=""><div><strong class="name"></strong><span class="artist"></span><small class="album"></small></div><button class="play" type="button">▶ تشغيل</button><a class="open" target="_blank" rel="noopener">Spotify</a></article></template>
-
+  <template id="trackTemplate"><article class="track"><img class="cover" alt=""><div><strong class="name"></strong><span class="artist"></span><small class="album"></small></div><button class="play" type="button">▶ تشغيل هنا</button><a class="open" target="_blank" rel="noopener">Spotify</a></article></template>
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
-  <script type="module" src="src/os-shell.js?v=20260801-2245"></script>
-  <script type="module" src="src/taste-engine.js?v=20260801-2245"></script>
-  <script type="module" src="src/app.js?v=20260801-2245"></script>
-  <script type="module" src="src/car-connect.js?v=20260801-2245"></script>
-  <script type="module" src="src/car-playlist.js?v=20260801-2245"></script>
-  <script type="module" src="src/precise-search.js?v=20260801-2245"></script>
-  <script type="module" src="src/ai-dj.js?v=20260801-2245"></script>
+  <script type="module" src="src/os-shell.js?v=20260801-2345"></script>
+  <script type="module" src="src/taste-engine.js?v=20260801-2345"></script>
+  <script src="src/playback-engine-v2.js?v=20260801-2345"></script>
+  <script type="module" src="src/app.js?v=20260801-2345"></script>
+  <script type="module" src="src/car-connect.js?v=20260801-2345"></script>
+  <script type="module" src="src/car-playlist.js?v=20260801-2345"></script>
+  <script type="module" src="src/precise-search.js?v=20260801-2345"></script>
+  <script type="module" src="src/ai-dj.js?v=20260801-2345"></script>
 </body></html>

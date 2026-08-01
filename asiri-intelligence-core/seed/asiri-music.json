@@ -1,0 +1,52 @@
+{
+  "project": {
+    "name": "Asiri Music OS",
+    "slug": "asiri-music-os",
+    "description": "منصة موسيقية ذكية لإدارة البحث والجلسات والذوق ووضع السيارة.",
+    "status": "active",
+    "current_phase": "Web Stable",
+    "progress": 78
+  },
+  "decisions": [
+    {
+      "title": "إيقاف تشغيل Spotify داخل Safari",
+      "context": "استمرار خطأ Device not found عند تشغيل Spotify Web Playback SDK على iPhone Safari.",
+      "decision": "اعتماد Asiri Music OS Web لإدارة البحث والجلسات، واستخدام تطبيق Spotify الأصلي للتشغيل.",
+      "rationale": "المسار الأصلي أكثر استقرارًا ويعمل مع السيارة والسماعات ومركز التحكم.",
+      "alternatives": [
+        "الاستمرار في إعادة تهيئة Web Playback SDK",
+        "فتح الأغنية مباشرة في Spotify",
+        "إنشاء تطبيق iOS أصلي باستخدام Spotify App Remote"
+      ],
+      "status": "approved"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "إنشاء تطبيق Asiri Music iOS أصلي",
+      "status": "todo",
+      "priority": 1
+    },
+    {
+      "title": "ربط Spotify App Remote واختبار أزرار السيارة",
+      "status": "todo",
+      "priority": 1
+    }
+  ],
+  "memories": [
+    {
+      "kind": "problem",
+      "title": "Spotify Device not found",
+      "content": "Spotify Web Playback SDK لم يكن مستقرًا عمليًا على Safari في iPhone.",
+      "importance": 5,
+      "tags": ["spotify", "ios", "safari", "playback"]
+    },
+    {
+      "kind": "solution",
+      "title": "المسار المستقر الحالي",
+      "content": "إدارة الجلسة داخل Asiri Music والتشغيل الفعلي داخل Spotify الأصلي إلى حين بناء تطبيق iOS.",
+      "importance": 5,
+      "tags": ["spotify-native", "car-mode", "ios"]
+    }
+  ]
+}

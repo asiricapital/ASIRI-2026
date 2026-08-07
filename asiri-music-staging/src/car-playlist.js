@@ -46,7 +46,7 @@ async function init(){
   $('#exportCarPlaylist').addEventListener('click',async()=>{
     const button=$('#exportCarPlaylist');
     const status=$('#carPlaylistStatus');
-    const tracks=bridge.getQueue?.()||[];
+    const tracks=bridge.getDriverQueue?.()||bridge.getQueue?.()||bridge.getStorage?.('aiDj.lastSession')?.tracks||[];
     if(!tracks.length){status.textContent='لا توجد قائمة حالية. ابحث أو أنشئ جلسة AI DJ أولًا.';return;}
     button.disabled=true;
     button.textContent='جارٍ إنشاء القائمة داخل Spotify…';
@@ -66,6 +66,15 @@ async function init(){
       button.textContent='🚗 إنشاء وفتح جلسة السيارة في Spotify';
     }
   });
+  const refreshAvailability=()=>{
+    const tracks=bridge.getDriverQueue?.()||bridge.getQueue?.()||[];
+    const button=$('#exportCarPlaylist');
+    if(button)button.disabled=!tracks.length;
+  };
+  refreshAvailability();
+  window.addEventListener('asiri:queue-changed',refreshAvailability);
+  window.addEventListener('asiri:session-updated',refreshAvailability);
+  window.addEventListener('asiri:session-load',refreshAvailability);
 }
 
 init().catch(error=>console.error('[Car Playlist isolated]',error));

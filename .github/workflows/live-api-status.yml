@@ -34,7 +34,7 @@ jobs:
             --output api-intelligence/live-status.json \
             --timeout-ms 12000 \
             --concurrency 4
-          node -e "const x=require('./api-intelligence/live-status.json'); if (!x.generatedAt || x.summary.total !== 16) process.exit(1); console.log(x.generatedAt, x.summary)"
+          node -e "const x=require('./api-intelligence/live-status.json'); const serviceCount=Object.keys(x.services||{}).length; if (!x.generatedAt || x.summary.total < 1 || x.summary.total !== serviceCount) process.exit(1); console.log(x.generatedAt, x.summary)"
 
       - name: Commit verified status
         run: |

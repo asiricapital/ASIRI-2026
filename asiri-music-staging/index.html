@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="car-connect.css?v=20260802-0010">
   <link rel="stylesheet" href="os-shell.css?v=20260802-0010">
   <link rel="stylesheet" href="stable-web.css?v=20260802-0010">
+  <link rel="stylesheet" href="library.css?v=20260807-library-v1">
   <style>.car-native-card button{width:100%;border:0;border-radius:18px;background:#1ed760;color:#041006;font-weight:900;padding:15px 18px;font-size:16px}.car-native-card button:disabled{opacity:.55}</style>
 </head>
 <body>
@@ -30,14 +31,35 @@
 
     <section class="os-page" data-os-page="sessions">
       <div class="os-section-title"><div><h2>الجلسات</h2><p>أنشئ الجلسة وعدّل ترتيبها ثم افتح الأغنية أو القائمة في Spotify.</p></div><span>✨</span></div>
-      <div id="sessionsMount"><section id="aiDjCard" class="card ai-dj-card"><div class="section-head"><div><span class="eyebrow">ASIRI AI DJ</span><h2>اصنع جلستك بالكلمات</h2></div><span id="aiDjCount"></span></div><p class="muted">اكتب الجو الذي تريده وسيجمع AI DJ جلسة مرتبة حسب طلبك وملف ذوقك.</p><div class="ai-dj-form"><input id="aiDjPrompt" placeholder="مثال: رحلة ليلية بطرب خليجي هادئ"><button id="aiDjGenerate" type="button">✨ إنشاء الجلسة</button></div><div class="ai-presets"><button type="button" data-ai-preset="جلسة قهوة خليجية هادئة">☕ قهوة</button><button type="button" data-ai-preset="رحلة ليلية وطريق طويل">🚗 سفر</button><button type="button" data-ai-preset="طرب سعودي قديم">🎻 طرب</button><button type="button" data-ai-preset="أغاني خليجية حماسية">🔥 حماس</button></div><p id="aiDjStatus" class="muted">اكتب طلبك أو اختر جلسة جاهزة.</p><div id="aiDjPreview" class="ai-dj-preview"></div><button id="aiDjPlay" class="ai-dj-play" type="button">▶ فتح أول أغنية في Spotify</button></section></div>
+      <div id="sessionsMount"><section id="aiDjCard" class="card ai-dj-card"><div class="section-head"><div><span class="eyebrow">ASIRI AI DJ</span><h2>اصنع جلستك بالكلمات</h2></div><span id="aiDjCount"></span></div><p class="muted">اكتب الجو الذي تريده وسيجمع AI DJ جلسة مرتبة حسب طلبك وملف ذوقك.</p><div class="ai-dj-form"><input id="aiDjPrompt" placeholder="مثال: رحلة ليلية بطرب خليجي هادئ"><button id="aiDjGenerate" type="button">✨ إنشاء الجلسة</button></div><div class="ai-presets"><button type="button" data-ai-preset="جلسة قهوة خليجية هادئة">☕ قهوة</button><button type="button" data-ai-preset="رحلة ليلية وطريق طويل">🚗 سفر</button><button type="button" data-ai-preset="طرب سعودي قديم">🎻 طرب</button><button type="button" data-ai-preset="أغاني خليجية حماسية">🔥 حماس</button></div><p id="aiDjStatus" class="muted">اكتب طلبك أو اختر جلسة جاهزة.</p><div id="aiDjPreview" class="ai-dj-preview"></div><div class="session-primary-actions"><button id="aiDjPlay" class="ai-dj-play" type="button">▶ فتح أول أغنية في Spotify</button><button id="saveCurrentSession" type="button">♡ حفظ الجلسة</button></div><p id="saveSessionStatus" aria-live="polite"></p></section></div>
     </section>
 
-    <section class="os-page" data-os-page="library"><div class="os-section-title"><div><h2>مكتبتي</h2><p>المفضلة، الجلسات المحفوظة، والفنانون الأقرب لذوقك.</p></div><span>♥</span></div><div class="os-panel"><div class="os-panel-head"><h3>الجلسات المحفوظة</h3><span>قريبًا</span></div><div class="os-empty">في المرحلة التالية ستظهر هنا جميع جلساتك مع الحفظ والتسمية والتعديل والمشاركة.</div></div><div class="os-panel"><div class="os-panel-head"><h3>الأغاني المفضلة</h3><span id="libraryLikesLabel">تتزامن مع ملف الذوق</span></div><div class="os-empty">تظهر اختياراتك حاليًا داخل ملف الذوق، وسيتم تحويلها إلى مكتبة كاملة في المرحلة التالية.</div></div></section>
+    <section class="os-page" data-os-page="library">
+      <div class="os-section-title"><div><h2>مكتبتي</h2><p>أغانيك المفضلة وجلساتك محفوظة في مكان واحد.</p></div><span>♥</span></div>
+      <div class="library-overview">
+        <article class="library-metric"><span>الجلسات المحفوظة</span><strong id="savedSessionsMetric">0</strong></article>
+        <article class="library-metric"><span>أغاني المكتبة</span><strong id="libraryTrackMetric">0</strong></article>
+      </div>
+      <div class="os-panel">
+        <div class="os-panel-head"><div><h3>الجلسات المحفوظة</h3></div><span id="savedSessionsCount" class="library-count">0 جلسة</span></div>
+        <div id="savedSessionsList" class="saved-session-grid"></div>
+        <div id="savedSessionsEmpty" class="os-empty library-empty">لا توجد جلسات محفوظة بعد. أنشئ جلسة من AI DJ ثم اضغط «حفظ الجلسة».</div>
+      </div>
+      <div class="os-panel">
+        <div class="os-panel-head">
+          <div><h3>الأغاني المفضلة</h3><span id="libraryLikesLabel" class="muted">إعجابات Asiri + الأغاني المحفوظة في Spotify</span></div>
+          <div class="library-panel-actions"><span id="libraryTrackCount" class="library-count">0 أغنية</span><button id="syncSpotifyLibrary" class="library-sync" type="button">↻ مزامنة Spotify</button></div>
+        </div>
+        <div class="library-search-row"><input id="librarySearch" class="library-search" type="search" autocomplete="off" placeholder="ابحث داخل مكتبتك باسم الأغنية أو الفنان"></div>
+        <p id="librarySyncStatus" class="library-status" aria-live="polite"></p>
+        <div id="libraryTracks" class="library-track-grid"></div>
+        <div id="libraryTracksEmpty" class="os-empty library-empty">لا توجد أغنيات في المكتبة بعد.</div>
+      </div>
+    </section>
 
     <section class="os-page" data-os-page="car"><div class="os-section-title"><div><h2>وضع السيارة</h2><p>جهّز القائمة وافتحها في Spotify للتحكم من أزرار السيارة.</p></div><span>🚗</span></div><div class="os-panel"><div class="os-panel-head"><h3>مسار التشغيل الموثوق</h3><span class="eyebrow">SPOTIFY NATIVE</span></div><p class="muted">أنشئ الجلسة أولًا، ثم صدّرها إلى Spotify وشغّلها من التطبيق الأصلي.</p></div><div id="carMount"></div></section>
 
-    <section class="os-page" data-os-page="settings"><div class="os-section-title"><div><h2>الإعدادات</h2><p>حالة النظام والحساب والإصدار.</p></div><span>⚙</span></div><div id="settingsMount" class="os-settings-list"><div class="os-setting"><div><strong>بيئة التشغيل</strong><span>نسخة الاختبار المستقرة</span></div><b>Staging</b></div><div class="os-setting"><div><strong>وضع التشغيل</strong><span>Spotify Native — بدون Web Playback</span></div><b>Stable</b></div><div class="os-setting"><div><strong>الإصدار</strong><span>Asiri Music OS Web Stable</span></div><b>1.1</b></div><div class="os-setting"><div><strong>حفظ البيانات</strong><span>محلي على هذا الجهاز حاليًا</span></div><b>Local</b></div></div></section>
+    <section class="os-page" data-os-page="settings"><div class="os-section-title"><div><h2>الإعدادات</h2><p>حالة النظام والحساب والإصدار.</p></div><span>⚙</span></div><div id="settingsMount" class="os-settings-list"><div class="os-setting"><div><strong>بيئة التشغيل</strong><span>نسخة الاختبار المستقرة</span></div><b>Staging</b></div><div class="os-setting"><div><strong>وضع التشغيل</strong><span>Spotify Native — بدون Web Playback</span></div><b>Stable</b></div><div class="os-setting"><div><strong>الإصدار</strong><span>Asiri Music OS — Library Edition</span></div><b>1.2</b></div><div class="os-setting"><div><strong>حفظ البيانات</strong><span>محلي على هذا الجهاز حاليًا</span></div><b>Local</b></div></div></section>
 
     <section id="healthCard" class="card health-card"><div><span class="eyebrow">System Health</span><h2>حالة النظام</h2></div><strong id="healthStatus">جارٍ الفحص…</strong></section>
     <section id="profileCard" class="card hidden"><strong id="profileName"></strong><span id="profilePlan"></span></section>
@@ -55,6 +77,7 @@
   <script type="module" src="src/car-connect.js?v=20260802-0010"></script>
   <script type="module" src="src/car-playlist.js?v=20260802-0010"></script>
   <script type="module" src="src/precise-search.js?v=20260802-0010"></script>
-  <script type="module" src="src/ai-dj.js?v=20260802-0010"></script>
+  <script type="module" src="src/ai-dj.js?v=20260807-library-v1"></script>
+  <script type="module" src="src/library.js?v=20260807-library-v1"></script>
 </body>
 </html>

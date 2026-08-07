@@ -24,7 +24,7 @@ test('catalog ids are unique and required fields are present', () => {
     ids.add(item.id);
     assert.ok(item.name.length > 1);
     assert.ok(item.description.length > 10);
-    assert.ok(['No', 'apiKey', 'OAuth'].includes(item.auth));
+    assert.ok(['No', 'apiKey', 'OAuth', 'Bearer Token'].includes(item.auth));
     assert.equal(item.https, true);
     assert.ok(['Yes', 'No', 'Unknown'].includes(item.cors));
     assert.match(item.docs, /^https:\/\//);

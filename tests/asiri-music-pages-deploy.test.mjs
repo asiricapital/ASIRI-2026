@@ -2,17 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
-test('GitHub Pages publishes the current Asiri Music build at /asiri-music',async()=>{
-  const workflow=await readFile('.github/workflows/pages.yml','utf8');
-  const music=await readFile('asiri-music-staging/index.html','utf8');
-  const callback=await readFile('asiri-music-staging/callback.html','utf8');
-  assert.match(workflow,/"asiri-music-staging\/\*\*"/);
-  assert.match(workflow,/mkdir -p _site\/asiri-music/);
-  assert.match(workflow,/cp -R asiri-music-staging\/\. _site\/asiri-music\//);
-  assert.match(workflow,/test -s _site\/asiri-music\/callback\.html/);
-  assert.match(workflow,/id="smartMixPanel"/);
-  assert.match(music,/النسخة الحية عبر GitHub Pages/);
-  assert.match(music,/>Live<\/b>/);
-  assert.match(callback,/redirectUri=new URL\('callback\.html',location\.href\)\.href/);
-  assert.match(callback,/location\.replace\('\.\/'\)/);
+test('the branch-backed /asiri-music entry serves the current Music build',async()=>{
+  const staging=await readFile('asiri-music-staging/index.html','utf8');
+  const live=await readFile('asiri-music/index.html','utf8');
+  const stagingCallback=await readFile('asiri-music-staging/callback.html','utf8');
+  const liveCallback=await readFile('asiri-music/callback.html','utf8');
+  const base='  <base href="../asiri-music-staging/">\n';
+  assert.match(live,/id="smartMixPanel"/);
+  assert.match(live,/النسخة الحية عبر GitHub Pages/);
+  assert.match(live,/<base href="\.\.\/asiri-music-staging\/">/);
+  assert.equal(live.replace(base,''),staging);
+  assert.equal(liveCallback,stagingCallback);
+  assert.match(liveCallback,/redirectUri=new URL\('callback\.html',location\.href\)\.href/);
+  assert.match(liveCallback,/location\.replace\('\.\/'\)/);
 });

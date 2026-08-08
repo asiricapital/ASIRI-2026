@@ -16,3 +16,4 @@ function renderDashboard(){const root=$('#tasteDashboard');if(!root)return;const
 window.addEventListener('asiri:track-rendered',event=>{try{enhanceTrack(event.detail.card,event.detail.track)}catch(error){console.error('[Taste Engine isolated]',error)}});
 window.addEventListener('storage',renderDashboard);
 renderDashboard();
+window.AsiriTasteEngine={rate,getRating};

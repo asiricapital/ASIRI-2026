@@ -36,3 +36,15 @@ test('saved library tracks use the Asiri playback queue',async()=>{
   assert.match(library,/bridge\.playQueue\(\[track\]/);
   assert.match(library,/source:'saved-session',userGesture:true/);
 });
+
+test('Now Playing is wired to the in-app player with seek and taste controls',async()=>{
+  const html=await read('index.html');
+  const app=await read('src/app.js');
+  const nowPlaying=await read('src/now-playing.js');
+  assert.match(html,/id="nowPlaying"/);
+  assert.match(html,/id="nowSeek"/);
+  assert.match(html,/src\/now-playing\.js/);
+  assert.match(app,/seekPlayback:async positionMs=>ensurePlaybackEngine\(\)\.seek\(positionMs\)/);
+  assert.match(nowPlaying,/asiri:player-state/);
+  assert.match(nowPlaying,/AsiriTasteEngine\.rate\(currentTrack,'like'\)/);
+});

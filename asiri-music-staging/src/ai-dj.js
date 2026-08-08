@@ -279,4 +279,10 @@ window.addEventListener('asiri:session-load',event=>{
 });
 
 window.addEventListener('asiri:more-like-this',event=>generateSimilarSession(event.detail?.track));
+window.addEventListener('asiri:ai-dj-prompt',event=>{
+  const prompt=normalizePrompt(event.detail?.prompt);
+  if(!prompt)return;
+  window.AsiriMusicOS?.openPage?.('sessions');
+  generateSession({promptOverride:prompt});
+});
 init().catch(error=>console.error('[ASIRI DJ]',error));

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="session-controls.css?v=20260802-0010">
   <link rel="stylesheet" href="car-connect.css?v=20260808-driver-v1">
   <link rel="stylesheet" href="os-shell.css?v=20260802-0010">
+  <link rel="stylesheet" href="moment.css?v=20260808-moment-v1">
   <link rel="stylesheet" href="stable-web.css?v=20260802-0010">
   <link rel="stylesheet" href="library.css?v=20260807-library-v1">
   <link rel="stylesheet" href="now-playing.css?v=20260808-ai-dj-v2">
@@ -26,6 +27,12 @@
       <div class="os-hero"><span class="eyebrow">ASIRI MUSIC</span><h2 id="osGreeting">مرحبًا أحمد</h2><p>ابحث، كوّن جلستك، واستمع داخل Asiri Music من مكان واحد.</p></div>
       <div class="web-playback-note"><strong>🎧 الاستماع داخل Asiri Music</strong>المشغل الداخلي يعمل مباشرة من حساب Spotify Premium ويظهر أسفل المنصة أثناء الاستماع.<span>يستخدم صلاحيات Spotify Web Playback المعتمدة في حسابك. وضع السيارة يبقى مستقلاً عبر Spotify لضمان التحكم أثناء القيادة.</span></div>
       <div class="os-quick-grid"><button class="os-quick" data-open-page="sessions"><span>✨</span>إنشاء جلسة ذكية</button><button class="os-quick" data-open-page="search"><span>⌕</span>بحث موسيقي</button><button class="os-quick" data-open-page="car"><span>🚗</span>تجهيز جلسة السيارة</button><button class="os-quick" data-open-page="library"><span>♥</span>مكتبتي</button></div>
+      <section id="asiriMoment" class="asiri-moment" aria-labelledby="osMomentTitle">
+        <div class="asiri-moment-head"><span class="eyebrow">ASIRI MOMENT • LIVE</span><span class="asiri-moment-live"><i aria-hidden="true"></i><span id="osMomentClock">الآن</span></span></div>
+        <div class="asiri-moment-copy"><span id="osMomentEmoji" class="asiri-moment-emoji" aria-hidden="true">🌙</span><div><span id="osMomentEyebrow" class="eyebrow">مزاجك الآن</span><h3 id="osMomentTitle">لحظتك بصوت يناسبها</h3><p id="osMomentDescription">ASIRI يقرأ وقتك وذوقك ويجهز جلسة مناسبة بضغطة واحدة.</p></div></div>
+        <button id="osMomentPrimary" class="asiri-moment-primary" type="button">✨ اصنع لحظتي الآن</button>
+        <div class="asiri-moment-presets" aria-label="لحظات جاهزة"><button type="button" data-quick-moment>☀️ صباح</button><button type="button" data-quick-moment>☕ قهوة</button><button type="button" data-quick-moment>🚗 طريق</button><button type="button" data-quick-moment>🌙 ليل</button></div>
+      </section>
       <div class="listening-grid"><section class="listening-panel"><div class="listening-panel-head"><div><span class="eyebrow">CONTINUE LISTENING</span><h3>متابعة الاستماع</h3></div><span>من نفس النقطة</span></div><div id="continueListeningContent" class="listening-empty">ابدأ الاستماع داخل Asiri وسنحفظ آخر نقطة لك هنا.</div></section><section class="listening-panel"><div class="listening-panel-head"><div><span class="eyebrow">LISTEN AGAIN</span><h3>استمع مجددًا</h3></div><span id="recentListeningCount">جديد</span></div><div id="recentListeningList" class="recent-listening-list"></div><div id="recentListeningEmpty" class="listening-empty">ستظهر هنا آخر الأغاني التي استمعت إليها داخل Asiri.</div></section></div>
       <section id="smartMixPanel" class="os-panel smart-mix-panel"><div class="smart-mix-head"><div><span class="eyebrow">FOR YOU • ASIRI SMART MIX</span><h3>مزيج أحمد</h3><p>مزيج شخصي يتغير مع إعجاباتك وآخر ما استمعت إليه، ويعمل كاملًا داخل Asiri Music.</p></div><button id="smartMixGenerate" type="button">✨ أنشئ مزيجي</button></div><div id="smartMixSeeds" class="smart-mix-seeds"></div><div class="os-panel-head"><span id="smartMixCount">مزيج شخصي</span></div><div id="smartMixPreview" class="smart-mix-preview"></div><div class="smart-mix-actions"><button id="smartMixPlay" class="smart-mix-play" type="button" disabled>▶ تشغيل المزيج هنا</button><button id="smartMixSession" class="smart-mix-session" type="button" disabled>فتح كجلسة</button><span id="smartMixStatus" class="smart-mix-status" aria-live="polite">جارٍ تجهيز Smart Mix…</span></div></section>
       <div class="os-panel"><div class="os-panel-head"><h3>ملخصك الموسيقي</h3><span class="eyebrow">LIVE PROFILE</span></div><div class="os-dashboard-grid"><article class="os-stat"><span>الأغاني المعجبة</span><strong id="osLikeCount">0</strong></article><article class="os-stat"><span>فنانون مفضلون</span><strong id="osArtistCount">0</strong></article><article class="os-stat"><span>أغاني آخر جلسة</span><strong id="osSessionCount">0</strong></article><article id="osLastSession" class="os-stat"><span>آخر جلسة</span><strong>لا توجد</strong></article></div></div><div id="homeMount"></div>
@@ -66,7 +73,7 @@
 
     <section class="os-page" data-os-page="car"><div class="os-section-title"><div><h2>Smart Queue + Driver Mode</h2><p>جهّز ترتيب الأغاني قبل القيادة ثم أكمل التحكم من Spotify أو أزرار السيارة.</p></div><span>🚗</span></div><div class="os-panel"><div class="os-panel-head"><h3>مسار التشغيل الموثوق</h3><span class="eyebrow">SPOTIFY NATIVE</span></div><p class="muted">لا يعتمد وضع السيارة على Web Playback. رتّب Smart Queue هنا ثم افتح الجلسة داخل Spotify.</p></div><div id="carMount"></div></section>
 
-    <section class="os-page" data-os-page="settings"><div class="os-section-title"><div><h2>الإعدادات</h2><p>حالة النظام والحساب والإصدار.</p></div><span>⚙</span></div><div id="settingsMount" class="os-settings-list"><div class="os-setting"><div><strong>بيئة التشغيل</strong><span>النسخة الحية عبر GitHub Pages</span></div><b>Live</b></div><div class="os-setting"><div><strong>وضع التشغيل</strong><span>Web Playback داخل Asiri + Spotify Native للسيارة</span></div><b>Hybrid</b></div><div class="os-setting"><div><strong>الإصدار</strong><span>Asiri Music OS — ASIRI DJ</span></div><b>1.8</b></div><div class="os-setting"><div><strong>حفظ البيانات</strong><span>الذوق وسجل الاستماع وSmart Mix محفوظة محليًا على جهازك</span></div><b>Private</b></div></div></section>
+    <section class="os-page" data-os-page="settings"><div class="os-section-title"><div><h2>الإعدادات</h2><p>حالة النظام والحساب والإصدار.</p></div><span>⚙</span></div><div id="settingsMount" class="os-settings-list"><div class="os-setting"><div><strong>بيئة التشغيل</strong><span>النسخة الحية عبر GitHub Pages</span></div><b>Live</b></div><div class="os-setting"><div><strong>وضع التشغيل</strong><span>Web Playback داخل Asiri + Spotify Native للسيارة</span></div><b>Hybrid</b></div><div class="os-setting"><div><strong>الإصدار</strong><span>Asiri Music OS — ASIRI MOMENT</span></div><b>1.9</b></div><div class="os-setting"><div><strong>حفظ البيانات</strong><span>الذوق وسجل الاستماع وSmart Mix محفوظة محليًا على جهازك</span></div><b>Private</b></div></div></section>
 
     <section id="healthCard" class="card health-card"><div><span class="eyebrow">System Health</span><h2>حالة النظام</h2></div><strong id="healthStatus">جارٍ الفحص…</strong></section>
     <section id="profileCard" class="card hidden"><strong id="profileName"></strong><span id="profilePlan"></span></section>
@@ -92,7 +99,7 @@
   </section>
   <template id="trackTemplate"><article class="track"><img class="cover" alt=""><div><strong class="name"></strong><span class="artist"></span><small class="album"></small></div><button class="play" type="button">▶ تشغيل هنا</button><a class="open" target="_blank" rel="noopener">عرض في Spotify</a></article></template>
 
-  <script type="module" src="src/os-shell.js?v=20260802-0010"></script>
+  <script type="module" src="src/os-shell.js?v=20260808-moment-v1"></script>
   <script type="module" src="src/taste-engine.js?v=20260802-0010"></script>
   <script>window.onSpotifyWebPlaybackSDKReady=()=>window.dispatchEvent(new Event('asiri:spotify-sdk-ready'));</script>
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
@@ -104,7 +111,7 @@
   <script type="module" src="src/car-connect.js?v=20260808-driver-v1"></script>
   <script type="module" src="src/car-playlist.js?v=20260808-driver-v1"></script>
   <script type="module" src="src/precise-search.js?v=20260808-playback-v4"></script>
-  <script type="module" src="src/ai-dj.js?v=20260808-ai-dj-v2"></script>
+  <script type="module" src="src/ai-dj.js?v=20260808-moment-v1"></script>
   <script type="module" src="src/library.js?v=20260808-continuous-v1"></script>
 </body>
 </html>

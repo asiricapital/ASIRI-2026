@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="now-playing.css?v=20260808-continuous-v1">
   <link rel="stylesheet" href="listening-history.css?v=20260808-history-v1">
   <link rel="stylesheet" href="smart-mix.css?v=20260808-smartmix-v1">
+  <link rel="stylesheet" href="search.css?v=20260808-universal-v1">
   <style>.car-native-card button{width:100%;border:0;border-radius:18px;background:#1ed760;color:#041006;font-weight:900;padding:15px 18px;font-size:16px}.car-native-card button:disabled{opacity:.55}</style>
 </head>
 <body>
@@ -31,8 +32,8 @@
     </section>
 
     <section class="os-page" data-os-page="search">
-      <div class="os-section-title"><div><h2>البحث الذكي</h2><p>ابحث باسم الفنان أو اكتب طلبك بصورة طبيعية.</p></div><span>⌕</span></div>
-      <div id="searchMount"><section id="searchModule" class="card hero"><div><span class="eyebrow">SMART SEARCH</span><h2>ابحث بطريقتك</h2><p>مثال: أجمل موالات محمد عبده، أو اسم الفنان فقط.</p></div><form id="searchForm"><input id="searchInput" placeholder="أجمل موالات محمد عبده"><button>بحث</button></form><p id="statusText">سجّل الدخول للبدء.</p></section><section id="resultsModule"><div class="section-head"><h2>النتائج</h2><span id="resultCount"></span></div><div id="results" class="grid"></div></section></div>
+      <div class="os-section-title"><div><h2>البحث الذكي الشامل</h2><p>ابحث بأي كلمة: أغنية، فنان، ألبوم، قائمة، شيلات، موالات أو طلب كامل.</p></div><span>⌕</span></div>
+      <div id="searchMount"><section id="searchModule" class="card hero"><div><span class="eyebrow">UNIVERSAL SMART SEARCH</span><h2>ابحث عن كل ما تريد</h2><p>مثال: شيلات، طرب سعودي، أجمل موالات محمد عبده، أو اسم أغنية فقط.</p><div class="search-scope"><span>🎵 أغاني</span><span>🎤 فنانون</span><span>💿 ألبومات</span><span>♫ قوائم Spotify</span></div></div><form id="searchForm"><input id="searchInput" type="search" autocomplete="off" placeholder="اكتب أي شيء تريد سماعه…"><button>بحث</button></form><p id="searchStatusText" class="search-status" aria-live="polite">ابحث في كامل كتالوج Spotify الموسيقي.</p><p id="statusText" class="hidden" aria-live="polite"></p></section><section id="resultsModule"><div class="section-head"><h2>النتائج الشاملة</h2><span id="resultCount"></span></div><div id="results"></div></section></div>
     </section>
 
     <section class="os-page" data-os-page="sessions">
@@ -102,7 +103,7 @@
   <script type="module" src="src/smart-mix.js?v=20260808-smartmix-v1"></script>
   <script type="module" src="src/car-connect.js?v=20260808-driver-v1"></script>
   <script type="module" src="src/car-playlist.js?v=20260808-driver-v1"></script>
-  <script type="module" src="src/precise-search.js?v=20260802-0010"></script>
+  <script type="module" src="src/precise-search.js?v=20260808-universal-v1"></script>
   <script type="module" src="src/ai-dj.js?v=20260807-library-v1"></script>
   <script type="module" src="src/library.js?v=20260808-continuous-v1"></script>
 </body>

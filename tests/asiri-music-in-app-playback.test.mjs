@@ -24,6 +24,7 @@ test('the Spotify Web Playback SDK and Asiri playback engine load before the app
   const app=html.indexOf('src/app.js');
   assert.ok(sdkReady>=0&&sdk>sdkReady&&engine>sdk&&app>engine);
   assert.match(html,/▶ تشغيل هنا/);
+  assert.match(html,/playback-engine-v2\.js\?v=20260808-reliability-v2/);
 });
 
 test('the regular iPhone shell no longer forces native Spotify playback',async()=>{
@@ -52,12 +53,17 @@ test('Now Playing is wired to the in-app player with seek and taste controls',as
   assert.match(nowPlaying,/AsiriTasteEngine\.rate\(currentTrack,'like'\)/);
 });
 
-test('continuous playback sends the remaining Asiri queue to Spotify',async()=>{
+test('continuous playback isolates a rejected Spotify queue without blocking the selected song',async()=>{
   const engine=await read('src/playback-engine-v2.js');
-  assert.match(engine,/this\.queue\.slice\(this\.index\)\.map/);
+  assert.match(engine,/const FALLBACK_QUEUE_WINDOW=8;/);
+  assert.match(engine,/this\.queue\.slice\(this\.index\)\.map\(item=>this\.trackUri\(item\)\)\.filter\(Boolean\)/);
   assert.match(engine,/JSON\.stringify\(\{uris,position_ms:startPosition\}\)/);
-  assert.doesNotMatch(engine,/uris:\[track\.uri/);
+  assert.match(engine,/status!==400&&status!==403/);
+  assert.match(engine,/JSON\.stringify\(\{uris:\[selectedUri\],position_ms:startPosition\}\)/);
+  assert.match(engine,/\/me\/player\/queue\?uri=/);
+  assert.match(engine,/queueStatus===401\|\|queueStatus===429\|\|queueStatus>=500/);
   assert.match(engine,/التشغيل المستمر مفعّل/);
+  assert.match(engine,/وضع التشغيل الموثوق مفعّل/);
 });
 
 test('Now Playing exposes an interactive Up Next queue inside Asiri',async()=>{

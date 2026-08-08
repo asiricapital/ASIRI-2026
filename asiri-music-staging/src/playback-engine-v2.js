@@ -149,12 +149,13 @@ class AsiriPlaybackEngineV2 extends EventTarget{
       for(let attempt=1;attempt<=2;attempt++){
         try{
           const deviceId=await this.prepareDevice();
+          const uris=this.queue.slice(this.index).map(item=>item.uri||`spotify:track:${item.id}`);
           await this.api('/me/player/play?device_id='+encodeURIComponent(deviceId),{
             method:'PUT',
-            body:JSON.stringify({uris:[track.uri||`spotify:track:${track.id}`],position_ms:0})
+            body:JSON.stringify({uris,position_ms:0})
           });
           this.onHealth(true,'Playback Engine v2 يعمل');
-          this.onStatus(`يعمل الآن: ${track.name} — ${this.index+1} من ${this.queue.length}`);
+          this.onStatus(`يعمل الآن: ${track.name} — ${this.index+1} من ${this.queue.length} • التشغيل المستمر مفعّل`);
           return track;
         }catch(error){
           lastError=error;

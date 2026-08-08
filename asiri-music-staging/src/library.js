@@ -419,7 +419,7 @@ function createSessionCard(session){
   actions.className='saved-session-actions';
   actions.append(
     sessionAction('فتح وتعديل','session-open',()=>openSessionForEdit(session)),
-    sessionAction('▶ Spotify','session-play',()=>playSavedSession(session)),
+    sessionAction('▶ تشغيل هنا','session-play',()=>playSavedSession(session)),
     sessionAction('تسمية','',()=>renameSession(session)),
     sessionAction('مشاركة','',()=>shareSession(session)),
     sessionAction('حذف','session-delete',()=>deleteSession(session))

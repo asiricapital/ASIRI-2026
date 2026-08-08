@@ -17,9 +17,10 @@ test('Asiri Music requests the official Spotify in-app playback permissions',asy
 test('the Spotify Web Playback SDK and Asiri playback engine load before the app',async()=>{
   const html=await read('index.html');
   const sdk=html.indexOf('https://sdk.scdn.co/spotify-player.js');
+  const sdkReady=html.indexOf('onSpotifyWebPlaybackSDKReady');
   const engine=html.indexOf('src/playback-engine-v2.js');
   const app=html.indexOf('src/app.js');
-  assert.ok(sdk>=0&&engine>sdk&&app>engine);
+  assert.ok(sdkReady>=0&&sdk>sdkReady&&engine>sdk&&app>engine);
   assert.match(html,/▶ تشغيل هنا/);
 });
 
@@ -35,4 +36,16 @@ test('saved library tracks use the Asiri playback queue',async()=>{
   assert.match(library,/play\.textContent='▶ تشغيل هنا'/);
   assert.match(library,/bridge\.playQueue\(\[track\]/);
   assert.match(library,/source:'saved-session',userGesture:true/);
+});
+
+test('Now Playing is wired to the in-app player with seek and taste controls',async()=>{
+  const html=await read('index.html');
+  const app=await read('src/app.js');
+  const nowPlaying=await read('src/now-playing.js');
+  assert.match(html,/id="nowPlaying"/);
+  assert.match(html,/id="nowSeek"/);
+  assert.match(html,/src\/now-playing\.js/);
+  assert.match(app,/seekPlayback:async positionMs=>ensurePlaybackEngine\(\)\.seek\(positionMs\)/);
+  assert.match(nowPlaying,/asiri:player-state/);
+  assert.match(nowPlaying,/AsiriTasteEngine\.rate\(currentTrack,'like'\)/);
 });

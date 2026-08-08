@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="os-shell.css?v=20260802-0010">
   <link rel="stylesheet" href="stable-web.css?v=20260802-0010">
   <link rel="stylesheet" href="library.css?v=20260807-library-v1">
+  <link rel="stylesheet" href="now-playing.css?v=20260808-now-playing-v1">
   <style>.car-native-card button{width:100%;border:0;border-radius:18px;background:#1ed760;color:#041006;font-weight:900;padding:15px 18px;font-size:16px}.car-native-card button:disabled{opacity:.55}</style>
 </head>
 <body>
@@ -68,14 +69,29 @@
 
   <nav class="os-bottom-nav" aria-label="التنقل الرئيسي"><button class="os-nav-button is-active" data-os-target="home"><b>⌂</b>الرئيسية</button><button class="os-nav-button" data-os-target="search"><b>⌕</b>البحث</button><button class="os-nav-button" data-os-target="sessions"><b>✨</b>الجلسات</button><button class="os-nav-button" data-os-target="library"><b>♥</b>المكتبة</button><button class="os-nav-button" data-os-target="car"><b>🚗</b>السيارة</button><button class="os-nav-button" data-os-target="settings"><b>⚙</b>الإعدادات</button></nav>
 
-  <aside id="playerBar" class="player hidden"><img id="playerCover" alt=""><div><strong id="playerTitle">اختر أغنية</strong><span id="playerArtist"></span></div><button id="prevButton" type="button">⏮</button><button id="playButton" type="button">▶</button><button id="nextButton" type="button">⏭</button></aside>
+  <aside id="playerBar" class="player hidden" aria-label="مشغل Asiri Music"><button id="openNowPlaying" class="player-cover-button" type="button" aria-label="فتح شاشة التشغيل"><img id="playerCover" alt="غلاف الأغنية الحالية"></button><div><strong id="playerTitle">اختر أغنية</strong><span id="playerArtist"></span><span class="player-progress"><i id="playerProgress"></i></span></div><button id="prevButton" type="button" aria-label="السابق">⏮</button><button id="playButton" type="button" aria-label="تشغيل أو إيقاف">▶</button><button id="nextButton" type="button" aria-label="التالي">⏭</button></aside>
+
+  <section id="nowPlaying" class="now-playing hidden" aria-label="التشغيل الآن">
+    <div id="nowPlayingBackdrop" class="now-playing-backdrop"></div>
+    <div class="now-playing-content">
+      <header class="now-playing-header"><button id="closeNowPlaying" type="button" aria-label="إغلاق">⌄</button><div><span>يعمل الآن</span><strong>Asiri Music</strong></div><button id="nowFavoriteButton" type="button" aria-label="إضافة للمفضلة">♡</button></header>
+      <div class="now-artwork"><img id="nowCover" alt="غلاف الأغنية"></div>
+      <div class="now-meta"><h2 id="nowTrack">اختر أغنية</h2><p id="nowArtist">Asiri Music Player</p></div>
+      <div class="now-progress-wrap"><input id="nowSeek" type="range" min="0" max="1000" value="0" aria-label="موضع التشغيل"><div class="now-times"><span id="nowPosition">0:00</span><span id="nowDuration">0:00</span></div></div>
+      <div class="now-controls"><button id="nowPrevious" type="button" aria-label="السابق">⏮</button><button id="nowPlayPause" class="now-main-play" type="button" aria-label="تشغيل أو إيقاف">▶</button><button id="nowNext" type="button" aria-label="التالي">⏭</button></div>
+      <div class="now-actions"><button id="nowSave" type="button">♡ أعجبتني</button><a id="nowSpotifyLink" target="_blank" rel="noopener">فتح في Spotify</a></div>
+      <p id="nowStatus">المشغل جاهز</p>
+    </div>
+  </section>
   <template id="trackTemplate"><article class="track"><img class="cover" alt=""><div><strong class="name"></strong><span class="artist"></span><small class="album"></small></div><button class="play" type="button">▶ تشغيل هنا</button><a class="open" target="_blank" rel="noopener">عرض في Spotify</a></article></template>
 
   <script type="module" src="src/os-shell.js?v=20260802-0010"></script>
   <script type="module" src="src/taste-engine.js?v=20260802-0010"></script>
+  <script>window.onSpotifyWebPlaybackSDKReady=()=>window.dispatchEvent(new Event('asiri:spotify-sdk-ready'));</script>
   <script src="https://sdk.scdn.co/spotify-player.js"></script>
   <script src="src/playback-engine-v2.js?v=20260808-inapp-v1"></script>
   <script type="module" src="src/app.js?v=20260808-inapp-v1"></script>
+  <script type="module" src="src/now-playing.js?v=20260808-now-playing-v1"></script>
   <script type="module" src="src/car-connect.js?v=20260808-driver-v1"></script>
   <script type="module" src="src/car-playlist.js?v=20260808-driver-v1"></script>
   <script type="module" src="src/precise-search.js?v=20260802-0010"></script>

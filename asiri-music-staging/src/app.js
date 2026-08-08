@@ -111,6 +111,9 @@ function showPlayerTrack(track,playing){
 function updatePlayerBar(detail={}){
   if(Number.isInteger(detail.index))currentIndex=detail.index;
   showPlayerTrack(detail.track,!detail.paused);
+  const duration=Number(detail.duration)||0;
+  const position=Number(detail.position)||0;
+  if($('#playerProgress'))$('#playerProgress').style.width=duration?Math.min(100,Math.max(0,position/duration*100))+'%':'0%';
 }
 
 async function activateFromGesture(){
@@ -204,6 +207,10 @@ window.AsiriMusicBridge={
   setStorage:set,
   reconnectPlayer:async()=>ensurePlaybackEngine().connect(),
   hasInAppPlayback:()=>Boolean(playbackEngine?.deviceId),
+  previousTrack:async()=>ensurePlaybackEngine().previous(),
+  togglePlayback:async()=>ensurePlaybackEngine().toggle(),
+  nextTrack:async()=>ensurePlaybackEngine().next(),
+  seekPlayback:async positionMs=>ensurePlaybackEngine().seek(positionMs),
   openTrack,
   openTrackNative:openTrack
 };

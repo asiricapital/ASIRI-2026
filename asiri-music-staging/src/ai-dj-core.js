@@ -44,7 +44,7 @@ function stripDuration(value){
 function cleanArtistCandidate(value){
   const cleaned=stripDuration(value)
     .replace(STRIP_WORDS,' ')
-    .replace(/(^|\\s)(?:مع|من|في|على|إلى|الى|لي)(?=\\s|$)/gi,'$1')
+    .replace(/(^|\s)(?:مع|من|في|على|إلى|الى|لي)(?=\s|$)/gi,'$1')
     .replace(/[«»"'()\[\]{}:؛;!?؟.]/g,' ')
     .replace(/\s+/g,' ')
     .trim();
@@ -59,7 +59,7 @@ export function extractArtistHints(prompt){
   for(const segment of source){
     const cleaned=cleanArtistCandidate(segment);
     if(!cleaned)continue;
-    for(const part of cleaned.split(/\\s+و\\s+|\\s+و(?=[\\p{L}])|[\\/&+]/u).map(item=>item.trim())){
+    for(const part of cleaned.split(/\s+و\s+|\s+و(?=[\p{L}])|[\/&+]/u).map(item=>item.trim())){
       if(!part||part.length<2)continue;
       const words=part.split(/\s+/).filter(Boolean);
       if(words.length>4)continue;
@@ -80,7 +80,7 @@ export function parseSessionIntent(prompt,{seedTrack=null,defaultMinutes=60}={})
   const seedArtists=(seedTrack?.artists||[]).map(artist=>artist?.name).filter(Boolean);
   const artistHints=unique([...seedArtists,...artists]).slice(0,4);
   const searchText=stripDuration(normalizedPrompt)
-    .replace(/(^|\\s)(?:جلسة|شغل(?:ي)?|ابغى|أبغى|ابي|أبي|أريد|اريد|لمدة|مدة|حوالي|تقريباً|تقريبا)(?=\\s|$)/gi,'$1')
+    .replace(/(^|\s)(?:جلسة|شغل(?:ي)?|ابغى|أبغى|ابي|أبي|أريد|اريد|لمدة|مدة|حوالي|تقريباً|تقريبا)(?=\s|$)/gi,'$1')
     .replace(/\s+/g,' ')
     .trim();
   return{

@@ -24,7 +24,7 @@ test('the Spotify Web Playback SDK and Asiri playback engine load before the app
   const app=html.indexOf('src/app.js');
   assert.ok(sdkReady>=0&&sdk>sdkReady&&engine>sdk&&app>engine);
   assert.match(html,/▶ تشغيل هنا/);
-  assert.match(html,/playback-engine-v2\.js\?v=20260808-reliability-v2/);
+  assert.match(html,/playback-engine-v2\.js\?v=20260808-playback-v4/);
 });
 
 test('the regular iPhone shell no longer forces native Spotify playback',async()=>{
@@ -53,17 +53,24 @@ test('Now Playing is wired to the in-app player with seek and taste controls',as
   assert.match(nowPlaying,/AsiriTasteEngine\.rate\(currentTrack,'like'\)/);
 });
 
-test('continuous playback isolates a rejected Spotify queue without blocking the selected song',async()=>{
+test('continuous playback confirms the selected track and isolates a rejected Spotify queue',async()=>{
   const engine=await read('src/playback-engine-v2.js');
   assert.match(engine,/const FALLBACK_QUEUE_WINDOW=8;/);
   assert.match(engine,/this\.queue\.slice\(this\.index\)\.map\(item=>this\.trackUri\(item\)\)\.filter\(Boolean\)/);
-  assert.match(engine,/JSON\.stringify\(\{uris,position_ms:startPosition\}\)/);
-  assert.match(engine,/status!==400&&status!==403/);
-  assert.match(engine,/JSON\.stringify\(\{uris:\[selectedUri\],position_ms:startPosition\}\)/);
-  assert.match(engine,/\/me\/player\/queue\?uri=/);
-  assert.match(engine,/queueStatus===401\|\|queueStatus===429\|\|queueStatus>=500/);
+  assert.match(engine,/trackMatchesState\(state,track\)/);
+  assert.match(engine,/TRACK_NOT_CONFIRMED/);
+  assert.match(engine,/status===400\|\|status===403/);
+  assert.match(engine,/sendStartPlayback\(deviceId,\[selectedUri\],startPosition\)/);
+  assert.match(engine,/primeNextTrack\(deviceId\)/);
+  assert.match(engine,/status===401\|\|status===429\|\|status>=500/);
   assert.match(engine,/التشغيل المستمر مفعّل/);
-  assert.match(engine,/وضع التشغيل الموثوق مفعّل/);
+  assert.match(engine,/تم تثبيت التشغيل المباشر للأغنية المطلوبة/);
+});
+
+test('universal search delegates the user gesture to one playback activation path',async()=>{
+  const search=await read('src/precise-search.js');
+  assert.doesNotMatch(search,/bridge\.activateFromGesture/);
+  assert.match(search,/bridge\.playQueue\(queue,\{startIndex:index,source:'universal-search',userGesture:true\}\)/);
 });
 
 test('Now Playing exposes an interactive Up Next queue inside Asiri',async()=>{

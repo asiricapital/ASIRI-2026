@@ -1,5 +1,5 @@
 const CLIENT_ID='3ac122f971744e508bfd33ad0637d421';
-const SCOPES=['user-read-private','user-read-email','user-library-read','user-library-modify','playlist-read-private','playlist-modify-private','playlist-modify-public'];
+const SCOPES=['user-read-private','user-read-email','streaming','user-read-playback-state','user-modify-playback-state','user-library-read','user-library-modify','playlist-read-private','playlist-modify-private','playlist-modify-public'];
 const NS='asiri-music-pro.v1.';
 const $=selector=>document.querySelector(selector);
 const get=key=>{try{return JSON.parse(localStorage.getItem(NS+key)||'null')?.value??null}catch{return null}};
@@ -7,6 +7,7 @@ const set=(key,value)=>localStorage.setItem(NS+key,JSON.stringify({envelopeVersi
 const remove=key=>localStorage.removeItem(NS+key);
 let currentQueue=[];
 let currentIndex=-1;
+let playbackEngine=null;
 
 function base64url(input){return btoa(String.fromCharCode(...new Uint8Array(input))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_')}
 async function sha256(text){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))}
@@ -79,10 +80,49 @@ function openTrack(track,index){
   window.location.href=spotifyUrl(track);
 }
 
-async function playQueue(tracks,{startIndex=0,source='web'}={}){
+function ensurePlaybackEngine(){
+  if(playbackEngine)return playbackEngine;
+  if(!window.AsiriPlaybackEngineV2)throw new Error('مشغل Asiri لم يكتمل تحميله بعد. أعد المحاولة.');
+  playbackEngine=new window.AsiriPlaybackEngineV2({getToken:token,api,onStatus:status,onHealth:health});
+  playbackEngine.addEventListener('queue-changed',event=>{
+    currentQueue=[...(event.detail?.tracks||[])];
+    currentIndex=Number(event.detail?.currentIndex??-1);
+  });
+  playbackEngine.addEventListener('player-state',event=>updatePlayerBar(event.detail));
+  playbackEngine.addEventListener('track-selected',event=>{
+    currentIndex=Number(event.detail?.index??currentIndex);
+    showPlayerTrack(event.detail?.track,false);
+  });
+  return playbackEngine;
+}
+
+function showPlayerTrack(track,playing){
+  if(!track)return;
+  const bar=$('#playerBar');
+  bar?.classList.remove('hidden');
+  bar?.classList.toggle('is-playing',Boolean(playing));
+  const image=track.album?.images?.[0]?.url||track.images?.[0]?.url||'';
+  if($('#playerCover'))$('#playerCover').src=image;
+  if($('#playerTitle'))$('#playerTitle').textContent=track.name||'يعمل الآن';
+  if($('#playerArtist'))$('#playerArtist').textContent=(track.artists||[]).map(artist=>artist.name).join('، ');
+  if($('#playButton'))$('#playButton').textContent=playing?'⏸':'▶';
+}
+
+function updatePlayerBar(detail={}){
+  if(Number.isInteger(detail.index))currentIndex=detail.index;
+  showPlayerTrack(detail.track,!detail.paused);
+}
+
+async function activateFromGesture(){
+  return ensurePlaybackEngine().activateFromGesture();
+}
+
+async function playQueue(tracks,{startIndex=0,source='web',userGesture=false}={}){
   const queue=setQueue(tracks,{startIndex,source});
   if(!queue.length)throw new Error('لا توجد أغنيات صالحة للتشغيل.');
-  openTrack(queue[currentIndex],currentIndex);
+  const engine=ensurePlaybackEngine();
+  if(userGesture)await engine.activateFromGesture();
+  await engine.playQueue(queue,{startIndex:currentIndex,source,userGesture:false});
   return queue;
 }
 
@@ -98,30 +138,41 @@ function render(track,index,queue){
   openLink.href=spotifyUrl(track);
   openLink.textContent='عرض في Spotify';
   const playButton=fragment.querySelector('.play');
-  playButton.textContent='▶ تشغيل في Spotify';
-  playButton.addEventListener('click',event=>{
+  playButton.textContent='▶ تشغيل هنا';
+  playButton.addEventListener('click',async event=>{
     event.preventDefault();
     event.stopPropagation();
-    setQueue(queue,{startIndex:index,source:'search'});
-    openTrack(track,index);
+    try{await activateFromGesture();await playQueue(queue,{startIndex:index,source:'search'});}
+    catch(error){status(error.message||'تعذر تشغيل الأغنية.');}
   });
   queueMicrotask(()=>window.dispatchEvent(new CustomEvent('asiri:track-rendered',{detail:{card,track}})));
   return fragment;
 }
 
 async function load(){
-  $('#playerBar')?.classList.add('hidden');
-  health(true,'نسخة الويب مستقرة — التشغيل عبر Spotify الأصلي');
+  health(true,'Asiri Music جاهز');
   if(!get('spotify.accessToken')&&!get('spotify.refreshToken')){health(false,'بانتظار تسجيل الدخول');return}
   try{
     const me=await api('/me');
     if($('#profileName'))$('#profileName').textContent=me.display_name||me.id;
-    if($('#profilePlan'))$('#profilePlan').textContent=me.product==='premium'?'Spotify Premium':'Spotify متصل';
+    if($('#profilePlan'))$('#profilePlan').textContent='Spotify متصل';
     $('#profileCard')?.classList.remove('hidden');
     $('#loginButton')?.classList.add('hidden');
-    health(true,'الحساب متصل — البحث والجلسات جاهزة');
-    status('اختر أغنية لفتحها وتشغيلها في Spotify.');
-  }catch(error){console.error(error);health(false,'يلزم تسجيل الدخول مجددًا')}
+    status('اختر أغنية واستمع إليها داخل Asiri Music.');
+    try{await ensurePlaybackEngine().connect();health(true,'Spotify Player جاهز — الاستماع داخل Asiri Music')}
+    catch(error){
+      console.error(error);
+      health(false,error.message||'تعذر تجهيز المشغل الداخلي');
+      status('تعذر تشغيل Web Playback الآن. صلاحياتك الحالية محفوظة؛ أعد الربط فقط إذا طلب Spotify ذلك.');
+      const button=$('#loginButton');
+      if(button){button.classList.remove('hidden');button.textContent='إعادة ربط Spotify'}
+    }
+  }catch(error){
+    console.error(error);
+    health(false,'يلزم تسجيل الدخول مجددًا');
+    const button=$('#loginButton');
+    if(button){button.classList.remove('hidden');button.textContent='الدخول عبر Spotify'}
+  }
 }
 
 $('#loginButton')?.addEventListener('click',login);
@@ -137,7 +188,7 @@ $('#searchForm')?.addEventListener('submit',async event=>{
     setQueue(queue,{startIndex:0,source:'general-search'});
     queue.forEach((track,index)=>$('#results').appendChild(render(track,index,queue)));
     $('#resultCount').textContent=queue.length+' نتيجة';
-    status(queue.length?'اختر «تشغيل في Spotify» على أي أغنية.':'لا توجد نتائج.');
+    status(queue.length?'اختر «تشغيل هنا» على أي أغنية.':'لا توجد نتائج.');
   }catch(error){console.error(error);status(error.message==='AUTH_REQUIRED'?'سجّل الدخول أولًا.':error.message)}
 });
 
@@ -145,14 +196,19 @@ window.AsiriMusicBridge={
   api,
   playQueue,
   replaceQueue:setQueue,
-  activateFromGesture:async()=>true,
+  activateFromGesture,
   getQueue:()=>[...currentQueue],
   getCurrentIndex:()=>currentIndex,
   setStatus:status,
   getStorage:get,
   setStorage:set,
-  reconnectPlayer:async()=>true,
-  openTrack
+  reconnectPlayer:async()=>ensurePlaybackEngine().connect(),
+  hasInAppPlayback:()=>Boolean(playbackEngine?.deviceId),
+  openTrack,
+  openTrackNative:openTrack
 };
 window.dispatchEvent(new CustomEvent('asiri:bridge-ready'));
+$('#prevButton')?.addEventListener('click',async()=>{try{await activateFromGesture();await ensurePlaybackEngine().previous()}catch(error){status(error.message)}});
+$('#playButton')?.addEventListener('click',async()=>{try{await activateFromGesture();await ensurePlaybackEngine().toggle()}catch(error){status(error.message)}});
+$('#nextButton')?.addEventListener('click',async()=>{try{await activateFromGesture();await ensurePlaybackEngine().next()}catch(error){status(error.message)}});
 load();

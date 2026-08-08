@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {safeResumePosition,upsertHistory} from '../asiri-music-staging/src/listening-history-core.js';
+import {buildSmartMixQueries,personalizeTracks,smartMixSeeds} from '../asiri-music-staging/src/smart-mix-core.js';
 
 const root=new URL('../asiri-music-staging/',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
@@ -93,4 +94,36 @@ test('Continue Listening resumes the Asiri queue from its saved position',async(
   assert.match(engine,/position_ms:startPosition/);
   assert.match(history,/source:'resume-history'/);
   assert.match(history,/asiri:open-now-playing/);
+});
+
+test('Smart Mix derives personal seeds and filters disliked tracks',()=>{
+  const makeTrack=(id,artist,popularity=50)=>({id,name:'Track '+id,uri:'spotify:track:'+id,popularity,is_playable:true,artists:[{name:artist}],album:{images:[]}});
+  const taste={
+    artists:{'محمد عبده':{score:8,likes:3},'راشد الماجد':{score:3,likes:1}},
+    tracks:{blocked:{id:'blocked',value:'dislike'}}
+  };
+  const history=[makeTrack('recent','محمد عبده'),makeTrack('other','عبادي الجوهر')];
+  assert.equal(smartMixSeeds(taste,history,3)[0],'محمد عبده');
+  assert.match(buildSmartMixQueries(taste,history,4)[0],/محمد عبده/);
+  const mixed=personalizeTracks([
+    makeTrack('a','محمد عبده',80),makeTrack('a','محمد عبده',80),makeTrack('blocked','محمد عبده',100),
+    makeTrack('b','راشد الماجد',60),makeTrack('c','محمد عبده',70),makeTrack('d','عبادي الجوهر',65)
+  ],{taste,history,limit:6,maxPerArtist:2});
+  assert.equal(new Set(mixed.map(track=>track.id)).size,mixed.length);
+  assert.ok(!mixed.some(track=>track.id==='blocked'));
+  assert.ok(mixed.filter(track=>track.artists[0].name==='محمد عبده').length<=2);
+  assert.notEqual(mixed[0]?.artists[0].name,mixed[1]?.artists[0].name);
+});
+
+test('Asiri Smart Mix is wired to in-app playback and Saved Sessions',async()=>{
+  const html=await read('index.html');
+  const smartMix=await read('src/smart-mix.js');
+  assert.match(html,/id="smartMixPanel"/);
+  assert.match(html,/id="smartMixGenerate"/);
+  assert.match(html,/src\/smart-mix\.js/);
+  assert.match(smartMix,/smartMix\.last\.v1/);
+  assert.match(smartMix,/source:'smart-mix',userGesture:true/);
+  assert.match(smartMix,/asiri:open-now-playing/);
+  assert.match(smartMix,/aiDj\.lastSession/);
+  assert.doesNotMatch(smartMix,/\/recommendations|\/me\/top/);
 });

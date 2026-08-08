@@ -100,7 +100,6 @@ async function playQueueIndex(index){
   if(!api||!queue[index])return;
   try{
     if($('#nowStatus'))$('#nowStatus').textContent='جارٍ الانتقال إلى '+(queue[index].name||'الأغنية')+'…';
-    await api.activateFromGesture?.();
     await api.playQueue(queue,{startIndex:index,source:'now-playing-up-next',userGesture:true});
   }catch(error){
     console.error('[Now Playing queue]',error);
@@ -181,6 +180,14 @@ function toggleFavorite(){
   syncFavorite();
 }
 
+function moreLikeThis(){
+  if(!currentTrack)return;
+  const track=currentTrack;
+  close();
+  window.AsiriMusicOS?.openPage?.('sessions');
+  window.dispatchEvent(new CustomEvent('asiri:more-like-this',{detail:{track}}));
+}
+
 window.addEventListener('asiri:player-state',event=>applyState(event.detail));
 window.addEventListener('asiri:track-selected',event=>{
   if(event.detail?.track)currentTrack=event.detail.track;
@@ -203,6 +210,7 @@ $('#nowSeek')?.addEventListener('input',previewSeek);
 $('#nowSeek')?.addEventListener('change',seek);
 $('#nowFavoriteButton')?.addEventListener('click',toggleFavorite);
 $('#nowSave')?.addEventListener('click',toggleFavorite);
+$('#nowMoreLikeThis')?.addEventListener('click',moreLikeThis);
 $('#nowQueueToggle')?.addEventListener('click',()=>{
   const panel=$('#nowQueuePanel');
   if(!panel)return;

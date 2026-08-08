@@ -1,0 +1,21 @@
+.smart-mix-panel{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(48,32,88,.96),rgba(12,31,22,.97));border-color:rgba(154,130,255,.32)}
+.smart-mix-panel:before{content:"";position:absolute;width:220px;height:220px;left:-90px;top:-100px;border-radius:50%;background:rgba(143,130,255,.22);filter:blur(10px);pointer-events:none}
+.smart-mix-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.smart-mix-head h3{font-size:clamp(24px,6vw,34px);margin:4px 0 7px}
+.smart-mix-head p{max-width:590px;margin:0;color:#c3bdcf;line-height:1.6}
+.smart-mix-head>button,.smart-mix-actions button{border:0;border-radius:16px;padding:12px 15px;font-weight:900;cursor:pointer}
+.smart-mix-head>button{background:#8f82ff;color:#0c0917;white-space:nowrap}
+.smart-mix-head>button:disabled,.smart-mix-actions button:disabled{opacity:.48;cursor:default}
+.smart-mix-seeds{position:relative;display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+.smart-mix-seeds span{padding:7px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.055);color:#d9d4e1;font-size:11px;font-weight:800}
+.smart-mix-preview{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.smart-mix-track{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:9px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.045);color:#fff;padding:8px;text-align:right;cursor:pointer}
+.smart-mix-track img{width:48px;height:48px;border-radius:11px;object-fit:cover;background:#202020}
+.smart-mix-track span,.smart-mix-track strong,.smart-mix-track small{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.smart-mix-track small{color:#aaa4b3;margin-top:4px}
+.smart-mix-actions{position:relative;display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:9px;margin-top:13px}
+.smart-mix-play{background:#1ed760;color:#041006}
+.smart-mix-session{background:rgba(255,255,255,.09);color:#fff;border:1px solid rgba(255,255,255,.1)!important}
+.smart-mix-status{color:#bdb7c5;font-size:12px;text-align:left;line-height:1.5}
+@media(max-width:760px){.smart-mix-head{display:grid}.smart-mix-head>button{width:100%}.smart-mix-preview{grid-template-columns:1fr 1fr}.smart-mix-actions{grid-template-columns:1fr 1fr}.smart-mix-status{grid-column:1/-1;text-align:right}}
+@media(max-width:430px){.smart-mix-preview{grid-template-columns:1fr}.smart-mix-actions{grid-template-columns:1fr}.smart-mix-status{grid-column:auto}}

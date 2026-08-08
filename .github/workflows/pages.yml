@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "api-intelligence/**"
+      - "asiri-music-staging/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -28,21 +29,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare static API Atlas site
+      - name: Prepare Asiri Intelligence and Music site
         run: |
           rm -rf _site
           mkdir -p _site
           cp -R api-intelligence/. _site/
+          mkdir -p _site/asiri-music
+          cp -R asiri-music-staging/. _site/asiri-music/
           test -s _site/index.html
           test -s _site/catalog.js
           test -s _site/url-search.js
           test -s _site/live-status.json
           test -s _site/market-data.json
+          test -s _site/asiri-music/index.html
+          test -s _site/asiri-music/callback.html
+          test -s _site/asiri-music/src/app.js
+          test -s _site/asiri-music/src/playback-engine-v2.js
           grep -q "Asiri Intelligence OS" _site/index.html
           grep -q "url-search.js" _site/index.html
           grep -q "asiri-stock-search" _site/catalog.js
           grep -q "asiri-golden-alert" _site/catalog.js
           grep -q "asiri-analytics-engine" _site/catalog.js
+          grep -q 'id="smartMixPanel"' _site/asiri-music/index.html
+          grep -q 'src/smart-mix.js' _site/asiri-music/index.html
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

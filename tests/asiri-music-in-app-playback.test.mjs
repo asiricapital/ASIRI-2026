@@ -17,9 +17,10 @@ test('Asiri Music requests the official Spotify in-app playback permissions',asy
 test('the Spotify Web Playback SDK and Asiri playback engine load before the app',async()=>{
   const html=await read('index.html');
   const sdk=html.indexOf('https://sdk.scdn.co/spotify-player.js');
+  const sdkReady=html.indexOf('onSpotifyWebPlaybackSDKReady');
   const engine=html.indexOf('src/playback-engine-v2.js');
   const app=html.indexOf('src/app.js');
-  assert.ok(sdk>=0&&engine>sdk&&app>engine);
+  assert.ok(sdkReady>=0&&sdk>sdkReady&&engine>sdk&&app>engine);
   assert.match(html,/▶ تشغيل هنا/);
 });
 

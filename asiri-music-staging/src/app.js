@@ -120,12 +120,12 @@ async function activateFromGesture(){
   return ensurePlaybackEngine().activateFromGesture();
 }
 
-async function playQueue(tracks,{startIndex=0,source='web',userGesture=false}={}){
+async function playQueue(tracks,{startIndex=0,source='web',userGesture=false,positionMs=0}={}){
   const queue=setQueue(tracks,{startIndex,source});
   if(!queue.length)throw new Error('لا توجد أغنيات صالحة للتشغيل.');
   const engine=ensurePlaybackEngine();
   if(userGesture)await engine.activateFromGesture();
-  await engine.playQueue(queue,{startIndex:currentIndex,source,userGesture:false});
+  await engine.playQueue(queue,{startIndex:currentIndex,source,userGesture:false,positionMs});
   return queue;
 }
 

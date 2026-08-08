@@ -192,6 +192,7 @@ window.addEventListener('asiri:queue-changed',event=>{
   renderQueue();
 });
 window.addEventListener('asiri:taste-updated',syncFavorite);
+window.addEventListener('asiri:open-now-playing',open);
 
 $('#openNowPlaying')?.addEventListener('click',open);
 $('#closeNowPlaying')?.addEventListener('click',close);

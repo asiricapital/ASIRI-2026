@@ -132,13 +132,13 @@ class AsiriPlaybackEngineV2 extends EventTarget{
     return this.connect();
   }
 
-  async playQueue(tracks,{startIndex=0,source='unknown',userGesture=false}={}){
+  async playQueue(tracks,{startIndex=0,source='unknown',userGesture=false,positionMs=0}={}){
     this.setQueue(tracks,{startIndex,source});
     if(userGesture)await this.activateFromGesture();
-    return this.playIndex(this.index);
+    return this.playIndex(this.index,{positionMs});
   }
 
-  async playIndex(index){
+  async playIndex(index,{positionMs=0}={}){
     return this.enqueue(async()=>{
       if(!this.queue.length)throw new Error('لا توجد قائمة تشغيل حالية');
       this.index=(Number(index)+this.queue.length)%this.queue.length;
@@ -150,9 +150,10 @@ class AsiriPlaybackEngineV2 extends EventTarget{
         try{
           const deviceId=await this.prepareDevice();
           const uris=this.queue.slice(this.index).map(item=>item.uri||`spotify:track:${item.id}`);
+          const startPosition=Math.max(0,Number(positionMs)||0);
           await this.api('/me/player/play?device_id='+encodeURIComponent(deviceId),{
             method:'PUT',
-            body:JSON.stringify({uris,position_ms:0})
+            body:JSON.stringify({uris,position_ms:startPosition})
           });
           this.onHealth(true,'Playback Engine v2 يعمل');
           this.onStatus(`يعمل الآن: ${track.name} — ${this.index+1} من ${this.queue.length} • التشغيل المستمر مفعّل`);

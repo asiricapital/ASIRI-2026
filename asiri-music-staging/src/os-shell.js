@@ -1,3 +1,5 @@
+import {QUICK_MOMENTS,momentForHour,personalizeMomentPrompt} from './moment-core.js?v=20260808-moment-v1';
+
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const STORAGE_KEY='asiri-music-os.activePage';
@@ -19,12 +21,55 @@ function readEnvelope(key){
   try{return JSON.parse(localStorage.getItem('asiri-music-pro.v1.'+key)||'null')?.value??null}catch{return null}
 }
 
+function favoriteTasteArtist(taste){
+  return Object.entries(taste?.artists||{})
+    .filter(([,value])=>(Number(value?.score)||0)>0)
+    .sort((a,b)=>(Number(b[1]?.score)||0)-(Number(a[1]?.score)||0))[0]?.[0]||'';
+}
+
+function renderMoment(){
+  const card=$('#asiriMoment');
+  if(!card)return;
+  const moment=momentForHour();
+  const taste=readTaste();
+  const favorite=favoriteTasteArtist(taste);
+  const prompt=personalizeMomentPrompt(moment.prompt,favorite);
+  card.dataset.moment=moment.id;
+  $('#osMomentEmoji').textContent=moment.emoji;
+  $('#osMomentEyebrow').textContent=moment.eyebrow;
+  $('#osMomentTitle').textContent=moment.title;
+  $('#osMomentDescription').textContent=moment.description+(favorite?' • بلمسة من '+favorite:'');
+  $('#osMomentPrimary').dataset.momentPrompt=prompt;
+  try{$('#osMomentClock').textContent=new Intl.DateTimeFormat('ar-SA',{hour:'numeric',minute:'2-digit'}).format(new Date())}
+  catch{$('#osMomentClock').textContent='الآن'}
+}
+
+function launchMoment(prompt,{personalize=true}={}){
+  const clean=String(prompt||'').trim();
+  if(!clean)return;
+  const favorite=personalize?favoriteTasteArtist(readTaste()):'';
+  const personalized=personalizeMomentPrompt(clean,favorite);
+  openPage('sessions');
+  requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent('asiri:ai-dj-prompt',{detail:{prompt:personalized,source:'asiri-moment'}})));
+}
+
+function initMoment(){
+  renderMoment();
+  $('#osMomentPrimary')?.addEventListener('click',event=>launchMoment(event.currentTarget.dataset.momentPrompt,{personalize:false}));
+  $$('#asiriMoment [data-quick-moment]').forEach((button,index)=>{
+    const preset=QUICK_MOMENTS[index];
+    if(preset)button.dataset.momentPrompt=preset.prompt;
+    button.addEventListener('click',()=>launchMoment(button.dataset.momentPrompt));
+  });
+}
+
 function refreshHome(){
   const taste=readTaste();
   const tracks=Object.values(taste.tracks||{});
   const likes=tracks.filter(x=>x.value==='like').length;
   const artists=Object.values(taste.artists||{}).filter(x=>(x.score||0)>0).length;
   const session=readEnvelope('aiDj.lastSession');
+  renderMoment();
   $('#osGreeting').textContent=greeting();
   $('#osLikeCount').textContent=String(likes);
   $('#osArtistCount').textContent=String(artists);
@@ -76,6 +121,7 @@ function observeDynamicModules(){
 function init(){
   moveExistingModules();
   initNavigation();
+  initMoment();
   observeDynamicModules();
   refreshHome();
   window.addEventListener('asiri:taste-updated',refreshHome);

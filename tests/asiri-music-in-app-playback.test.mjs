@@ -10,7 +10,8 @@ test('Asiri Music requests the official Spotify in-app playback permissions',asy
   for(const scope of ['streaming','user-read-playback-state','user-modify-playback-state']){
     assert.match(app,new RegExp(`['"]${scope}['"]`));
   }
-  assert.match(app,/PLAYBACK_AUTH_VERSION='web-player-v1'/);
+  assert.doesNotMatch(app,/scopeVersion|PLAYBACK_AUTH_VERSION/);
+  assert.match(app,/ensurePlaybackEngine\(\)\.connect\(\)/);
 });
 
 test('the Spotify Web Playback SDK and Asiri playback engine load before the app',async()=>{

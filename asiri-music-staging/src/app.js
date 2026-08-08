@@ -1,6 +1,5 @@
 const CLIENT_ID='3ac122f971744e508bfd33ad0637d421';
 const SCOPES=['user-read-private','user-read-email','streaming','user-read-playback-state','user-modify-playback-state','user-library-read','user-library-modify','playlist-read-private','playlist-modify-private','playlist-modify-public'];
-const PLAYBACK_AUTH_VERSION='web-player-v1';
 const NS='asiri-music-pro.v1.';
 const $=selector=>document.querySelector(selector);
 const get=key=>{try{return JSON.parse(localStorage.getItem(NS+key)||'null')?.value??null}catch{return null}};
@@ -81,8 +80,6 @@ function openTrack(track,index){
   window.location.href=spotifyUrl(track);
 }
 
-function hasInAppPlayback(){return get('spotify.scopeVersion')===PLAYBACK_AUTH_VERSION}
-
 function ensurePlaybackEngine(){
   if(playbackEngine)return playbackEngine;
   if(!window.AsiriPlaybackEngineV2)throw new Error('مشغل Asiri لم يكتمل تحميله بعد. أعد المحاولة.');
@@ -117,14 +114,12 @@ function updatePlayerBar(detail={}){
 }
 
 async function activateFromGesture(){
-  if(!hasInAppPlayback())throw new Error('أعد ربط Spotify مرة واحدة لتفعيل الاستماع داخل Asiri Music.');
   return ensurePlaybackEngine().activateFromGesture();
 }
 
 async function playQueue(tracks,{startIndex=0,source='web',userGesture=false}={}){
   const queue=setQueue(tracks,{startIndex,source});
   if(!queue.length)throw new Error('لا توجد أغنيات صالحة للتشغيل.');
-  if(!hasInAppPlayback())throw new Error('أعد ربط Spotify مرة واحدة لتفعيل الاستماع داخل Asiri Music.');
   const engine=ensurePlaybackEngine();
   if(userGesture)await engine.activateFromGesture();
   await engine.playQueue(queue,{startIndex:currentIndex,source,userGesture:false});
@@ -162,18 +157,22 @@ async function load(){
     if($('#profileName'))$('#profileName').textContent=me.display_name||me.id;
     if($('#profilePlan'))$('#profilePlan').textContent='Spotify متصل';
     $('#profileCard')?.classList.remove('hidden');
-    if(hasInAppPlayback()){
-      $('#loginButton')?.classList.add('hidden');
-      status('اختر أغنية واستمع إليها داخل Asiri Music.');
-      try{await ensurePlaybackEngine().connect();health(true,'المشغل الداخلي متصل — جاهز للاستماع')}
-      catch(error){console.error(error);health(false,error.message||'تعذر تجهيز المشغل الداخلي')}
-    }else{
+    $('#loginButton')?.classList.add('hidden');
+    status('اختر أغنية واستمع إليها داخل Asiri Music.');
+    try{await ensurePlaybackEngine().connect();health(true,'Spotify Player جاهز — الاستماع داخل Asiri Music')}
+    catch(error){
+      console.error(error);
+      health(false,error.message||'تعذر تجهيز المشغل الداخلي');
+      status('تعذر تشغيل Web Playback الآن. صلاحياتك الحالية محفوظة؛ أعد الربط فقط إذا طلب Spotify ذلك.');
       const button=$('#loginButton');
-      if(button){button.classList.remove('hidden');button.textContent='تفعيل الاستماع داخل Asiri'}
-      health(false,'يلزم ربط Spotify مرة واحدة لتفعيل المشغل الداخلي');
-      status('اضغط «تفعيل الاستماع داخل Asiri» ثم وافق على صلاحيات التشغيل.');
+      if(button){button.classList.remove('hidden');button.textContent='إعادة ربط Spotify'}
     }
-  }catch(error){console.error(error);health(false,'يلزم تسجيل الدخول مجددًا')}
+  }catch(error){
+    console.error(error);
+    health(false,'يلزم تسجيل الدخول مجددًا');
+    const button=$('#loginButton');
+    if(button){button.classList.remove('hidden');button.textContent='الدخول عبر Spotify'}
+  }
 }
 
 $('#loginButton')?.addEventListener('click',login);
@@ -204,7 +203,7 @@ window.AsiriMusicBridge={
   getStorage:get,
   setStorage:set,
   reconnectPlayer:async()=>ensurePlaybackEngine().connect(),
-  hasInAppPlayback,
+  hasInAppPlayback:()=>Boolean(playbackEngine?.deviceId),
   openTrack,
   openTrackNative:openTrack
 };

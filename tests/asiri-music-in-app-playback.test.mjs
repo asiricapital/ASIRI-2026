@@ -49,3 +49,22 @@ test('Now Playing is wired to the in-app player with seek and taste controls',as
   assert.match(nowPlaying,/asiri:player-state/);
   assert.match(nowPlaying,/AsiriTasteEngine\.rate\(currentTrack,'like'\)/);
 });
+
+test('continuous playback sends the remaining Asiri queue to Spotify',async()=>{
+  const engine=await read('src/playback-engine-v2.js');
+  assert.match(engine,/this\.queue\.slice\(this\.index\)\.map/);
+  assert.match(engine,/JSON\.stringify\(\{uris,position_ms:0\}\)/);
+  assert.doesNotMatch(engine,/uris:\[track\.uri/);
+  assert.match(engine,/التشغيل المستمر مفعّل/);
+});
+
+test('Now Playing exposes an interactive Up Next queue inside Asiri',async()=>{
+  const html=await read('index.html');
+  const nowPlaying=await read('src/now-playing.js');
+  const library=await read('src/library.js');
+  assert.match(html,/id="nowQueueToggle"/);
+  assert.match(html,/id="nowQueueList"/);
+  assert.match(nowPlaying,/asiri:queue-changed/);
+  assert.match(nowPlaying,/source:'now-playing-up-next'/);
+  assert.match(library,/sessionAction\('▶ تشغيل هنا','session-play'/);
+});

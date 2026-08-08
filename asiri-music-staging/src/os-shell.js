@@ -49,6 +49,9 @@ function launchMoment(prompt,{personalize=true}={}){
   if(!clean)return;
   const favorite=personalize?favoriteTasteArtist(readTaste()):'';
   const personalized=personalizeMomentPrompt(clean,favorite);
+  const input=$('#aiDjPrompt');
+  if(input)input.value=personalized;
+  window.AsiriPendingDjPrompt=personalized;
   openPage('sessions');
   requestAnimationFrame(()=>window.dispatchEvent(new CustomEvent('asiri:ai-dj-prompt',{detail:{prompt:personalized,source:'asiri-moment'}})));
 }

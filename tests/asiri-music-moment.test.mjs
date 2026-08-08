@@ -34,6 +34,8 @@ test('ASIRI Moment is wired from home to the existing ASIRI DJ engine',async()=>
   assert.match(html,/<b>1\.9<\/b>/);
   assert.match(shell,/moment-core\.js\?v=20260808-moment-v1/);
   assert.match(shell,/asiri:ai-dj-prompt/);
+  assert.match(shell,/AsiriPendingDjPrompt/);
   assert.match(dj,/asiri:ai-dj-prompt/);
+  assert.match(dj,/AsiriPendingDjPrompt/);
   assert.match(dj,/generateSession\(\{promptOverride:prompt\}\)/);
 });

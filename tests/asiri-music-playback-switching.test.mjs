@@ -15,15 +15,30 @@ async function loadEngine(){
 }
 
 const track=id=>({id,name:`Track ${id}`,uri:`spotify:track:${id}`,artists:[{name:'Artist'}],album:{images:[]}});
+const stateFor=(id,paused=false)=>({paused,position:100,duration:180000,track_window:{current_track:{id,uri:`spotify:track:${id}`}}});
 
-test('Asiri playback starts a healthy remaining queue on the selected device',async()=>{
+test('playback preparation keeps the ready Asiri device active instead of pausing it',async()=>{
   const Engine=await loadEngine(),calls=[];
+  const engine=new Engine({getToken:async()=>'token',api:async(...args)=>{calls.push(args)}});
+  engine.connect=async()=>'asiri-device';
+  engine.waitUntilDeviceVisible=async()=>true;
+  assert.equal(await engine.prepareDevice(),'asiri-device');
+  assert.equal(calls.length,0);
+});
+
+test('Asiri confirms the selected track after starting a healthy remaining queue',async()=>{
+  const Engine=await loadEngine(),calls=[];
+  let current='old';
   const engine=new Engine({
     getToken:async()=>'token',
-    api:async(path,options={})=>{calls.push({path,options})}
+    api:async(path,options={})=>{
+      calls.push({path,options});
+      if(path.startsWith('/me/player/play'))current=JSON.parse(options.body).uris[0].split(':').at(-1);
+    }
   });
   engine.emit=()=>{};
   engine.prepareDevice=async()=>'asiri-device';
+  engine.player={getCurrentState:async()=>stateFor(current),resume:async()=>{}};
   engine.setQueue([track('a'),track('b')],{startIndex:0});
   const played=await engine.playIndex(0);
   const starts=calls.filter(call=>call.path.startsWith('/me/player/play'));
@@ -33,8 +48,9 @@ test('Asiri playback starts a healthy remaining queue on the selected device',as
   assert.match(starts[0].path,/device_id=asiri-device/);
 });
 
-test('a rejected batch falls back to the requested song and primes the next playable item',async()=>{
+test('a rejected batch falls back to the requested song and primes the next item',async()=>{
   const Engine=await loadEngine(),calls=[];
+  let current='old';
   const engine=new Engine({
     getToken:async()=>'token',
     api:async(path,options={})=>{
@@ -46,17 +62,79 @@ test('a rejected batch falls back to the requested song and primes the next play
           error.status=400;
           throw error;
         }
+        current=uris[0].split(':').at(-1);
       }
     }
   });
   engine.emit=()=>{};
   engine.prepareDevice=async()=>'asiri-device';
+  engine.player={getCurrentState:async()=>stateFor(current),resume:async()=>{}};
   engine.setQueue([track('wanted'),track('later')],{startIndex:0});
   const played=await engine.playIndex(0);
   const starts=calls.filter(call=>call.path.startsWith('/me/player/play')).map(call=>JSON.parse(call.options.body).uris);
   assert.equal(played.id,'wanted');
   assert.deepEqual(starts,[['spotify:track:wanted','spotify:track:later'],['spotify:track:wanted']]);
   assert.ok(calls.some(call=>call.path.startsWith('/me/player/queue?')&&call.path.includes('spotify%3Atrack%3Alater')));
+});
+
+test('a stale Spotify state triggers a selected-track retry before reporting success',async()=>{
+  const Engine=await loadEngine(),calls=[];
+  const engine=new Engine({
+    getToken:async()=>'token',
+    api:async(path,options={})=>{calls.push({path,options})}
+  });
+  engine.emit=()=>{};
+  engine.prepareDevice=async()=>'asiri-device';
+  let confirmations=0;
+  engine.waitForTrack=async()=>++confirmations>1;
+  engine.setQueue([track('wanted'),track('later')],{startIndex:0});
+  const played=await engine.playIndex(0);
+  const starts=calls.filter(call=>call.path.startsWith('/me/player/play')).map(call=>JSON.parse(call.options.body).uris);
+  assert.equal(played.id,'wanted');
+  assert.deepEqual(starts,[['spotify:track:wanted','spotify:track:later'],['spotify:track:wanted']]);
+});
+
+test('rate limits are surfaced without sending a duplicate selected-track request',async()=>{
+  const Engine=await loadEngine(),calls=[];
+  const engine=new Engine({
+    getToken:async()=>'token',
+    api:async(path,options={})=>{
+      calls.push({path,options});
+      if(path.startsWith('/me/player/play')){
+        const error=new Error('rate limited');
+        error.status=429;
+        throw error;
+      }
+    }
+  });
+  engine.emit=()=>{};
+  engine.prepareDevice=async()=>'asiri-device';
+  engine.setQueue([track('a'),track('b')],{startIndex:0});
+  await assert.rejects(engine.playIndex(0),/rate limited/);
+  assert.equal(calls.filter(call=>call.path.startsWith('/me/player/play')).length,1);
+});
+
+test('fallback queue skips an unavailable next item and primes the following track',async()=>{
+  const Engine=await loadEngine(),calls=[];
+  const engine=new Engine({
+    getToken:async()=>'token',
+    api:async(path,options={})=>{
+      calls.push({path,options});
+      if(path.includes('spotify%3Atrack%3Ab')){
+        const error=new Error('unavailable');
+        error.status=403;
+        throw error;
+      }
+    }
+  });
+  engine.emit=()=>{};
+  engine.queue=[track('a'),track('b'),track('c')];
+  engine.index=0;
+  const primed=await engine.primeNextTrack('asiri-device');
+  assert.equal(primed,2);
+  const queued=calls.filter(call=>call.path.startsWith('/me/player/queue?')).map(call=>call.path);
+  assert.equal(queued.length,2);
+  assert.ok(queued[1].includes('spotify%3Atrack%3Ac'));
 });
 
 test('playback normalizes malformed track URIs before sending them to Spotify',async()=>{

@@ -14,6 +14,9 @@ class AsiriPlaybackEngineV2 extends EventTarget{
     this.connecting=null;
     this.command=Promise.resolve();
     this.generation=0;
+    this.lastPlaybackState=null;
+    this.remoteQueueMode='batch';
+    this.queuedRemoteIndexes=new Set();
   }
 
   emit(type,detail={}){
@@ -55,7 +58,7 @@ class AsiriPlaybackEngineV2 extends EventTarget{
     this.player.addListener('ready',({device_id})=>{
       if(generation!==this.generation)return;
       this.deviceId=device_id;
-      this.onHealth(true,'Playback Engine v2 جاهز');
+      this.onHealth(true,'Playback Engine v3 جاهز');
       this.emit('playback-ready',{deviceId:device_id});
     });
     this.player.addListener('not_ready',({device_id})=>{
@@ -65,10 +68,15 @@ class AsiriPlaybackEngineV2 extends EventTarget{
     });
     this.player.addListener('player_state_changed',state=>{
       if(!state)return;
+      this.lastPlaybackState=state;
       const track=state.track_window?.current_track;
       if(track){
+        const previousIndex=this.index;
         const found=this.queue.findIndex(item=>item.id===track.id||item.uri===track.uri);
         if(found>=0)this.index=found;
+        if(found>=0&&found!==previousIndex&&this.remoteQueueMode==='single'){
+          this.primeNextTrack(this.deviceId).catch(error=>console.warn('[Playback Engine v3] queue prime',error));
+        }
       }
       this.emit('player-state',{track,paused:state.paused,position:state.position,duration:state.duration,index:this.index,queue:[...this.queue]});
     });
@@ -94,6 +102,8 @@ class AsiriPlaybackEngineV2 extends EventTarget{
     this.queue=[...new Map((tracks||[]).filter(track=>track?.id).map(track=>[track.id,track])).values()];
     if(!this.queue.length)throw new Error('لا توجد أغنيات صالحة للتشغيل');
     this.index=Math.min(Math.max(Number(startIndex)||0,0),this.queue.length-1);
+    this.remoteQueueMode='batch';
+    this.queuedRemoteIndexes.clear();
     this.emit('queue-changed',{tracks:[...this.queue],currentIndex:this.index,source});
     return [...this.queue];
   }
@@ -117,19 +127,58 @@ class AsiriPlaybackEngineV2 extends EventTarget{
 
   async prepareDevice(){
     const deviceId=await this.connect();
-    await this.api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[deviceId],play:false})});
     const visible=await this.waitUntilDeviceVisible(deviceId);
     if(!visible)throw new Error('Spotify لم يعتمد جهاز Asiri Music بعد');
     return deviceId;
   }
 
-  async recover(){
-    this.deviceId='';
-    this.generation++;
-    if(this.player){try{this.player.disconnect()}catch{}}
-    this.player=null;
-    await sleep(350);
-    return this.connect();
+  trackMatchesState(state,track){
+    const current=state?.track_window?.current_track;
+    if(!current||!track)return false;
+    const wantedIds=new Set([track.id,track.linked_from?.id].filter(Boolean));
+    return Boolean(current.uri===track.uri||[current.id,current.linked_from?.id].filter(Boolean).some(id=>wantedIds.has(id)));
+  }
+
+  async waitForTrack(track,timeout=2800){
+    const started=Date.now();
+    let resumed=false;
+    while(Date.now()-started<timeout){
+      let state=this.lastPlaybackState;
+      try{state=await this.player?.getCurrentState?.()||state}catch{}
+      if(this.trackMatchesState(state,track)){
+        if(!state?.paused)return true;
+        if(!resumed&&this.player?.resume){
+          resumed=true;
+          try{await this.player.resume()}catch{}
+        }
+      }
+      await sleep(140);
+    }
+    return false;
+  }
+
+  async startPlayback(deviceId,uris,startPosition){
+    return this.api('/me/player/play?device_id='+encodeURIComponent(deviceId),{
+      method:'PUT',
+      body:JSON.stringify({uris,position_ms:startPosition})
+    });
+  }
+
+  trackUri(track){
+    return track?.uri||`spotify:track:${track?.id||''}`;
+  }
+
+  async primeNextTrack(deviceId){
+    const nextIndex=this.index+1;
+    if(!deviceId||nextIndex>=this.queue.length||this.queuedRemoteIndexes.has(nextIndex))return;
+    const uri=this.trackUri(this.queue[nextIndex]);
+    if(!uri)return;
+    try{
+      await this.api('/me/player/queue?'+new URLSearchParams({uri,device_id:deviceId}),{method:'POST'});
+      this.queuedRemoteIndexes.add(nextIndex);
+    }catch(error){
+      console.warn('[Playback Engine v3] could not prime next track',error);
+    }
   }
 
   async playQueue(tracks,{startIndex=0,source='unknown',userGesture=false,positionMs=0}={}){
@@ -145,26 +194,37 @@ class AsiriPlaybackEngineV2 extends EventTarget{
       const track=this.queue[this.index];
       this.onStatus(`جارٍ تشغيل ${track.name}…`);
       this.emit('track-selected',{track,index:this.index,queue:[...this.queue]});
-      let lastError;
-      for(let attempt=1;attempt<=2;attempt++){
-        try{
-          const deviceId=await this.prepareDevice();
-          const uris=this.queue.slice(this.index).map(item=>item.uri||`spotify:track:${item.id}`);
-          const startPosition=Math.max(0,Number(positionMs)||0);
-          await this.api('/me/player/play?device_id='+encodeURIComponent(deviceId),{
-            method:'PUT',
-            body:JSON.stringify({uris,position_ms:startPosition})
-          });
-          this.onHealth(true,'Playback Engine v2 يعمل');
+      const deviceId=await this.prepareDevice();
+      const uris=this.queue.slice(this.index).map(item=>this.trackUri(item)).filter(Boolean);
+      const selectedUri=this.trackUri(track),startPosition=Math.max(0,Number(positionMs)||0);
+      let batchError=null;
+      this.lastPlaybackState=null;
+      try{
+        await this.startPlayback(deviceId,uris,startPosition);
+        if(await this.waitForTrack(track)){
+          this.remoteQueueMode='batch';
+          this.onHealth(true,'Playback Engine v3 يعمل');
           this.onStatus(`يعمل الآن: ${track.name} — ${this.index+1} من ${this.queue.length} • التشغيل المستمر مفعّل`);
           return track;
-        }catch(error){
-          lastError=error;
-          console.warn(`[Playback Engine v2] attempt ${attempt}`,error);
-          if(attempt<2)await this.recover();
         }
+        batchError=new Error('Spotify لم ينتقل إلى الأغنية المطلوبة بعد إرسال القائمة.');
+      }catch(error){batchError=error}
+
+      console.warn('[Playback Engine v3] batch start failed; retrying selected track only',batchError);
+      this.lastPlaybackState=null;
+      try{
+        await this.startPlayback(deviceId,[selectedUri],startPosition);
+        if(!await this.waitForTrack(track,4200))throw new Error('Spotify استلم أمر التشغيل لكنه لم ينتقل إلى الأغنية المطلوبة.');
+        this.remoteQueueMode='single';
+        this.queuedRemoteIndexes.clear();
+        await this.primeNextTrack(deviceId);
+        this.onHealth(true,'Playback Engine v3 يعمل');
+        this.onStatus(`يعمل الآن: ${track.name} • تم تثبيت التشغيل المباشر للأغنية المطلوبة`);
+        return track;
+      }catch(error){
+        console.warn('[Playback Engine v3] selected-track fallback failed',error);
+        throw error||batchError||new Error('تعذر تشغيل الأغنية داخل الموقع');
       }
-      throw lastError||new Error('تعذر التشغيل داخل الموقع');
     });
   }
 

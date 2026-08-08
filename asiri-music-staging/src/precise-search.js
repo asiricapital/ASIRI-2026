@@ -113,6 +113,7 @@ function renderTrack(track,index,queue,bridge){
   fragment.querySelector('.play').addEventListener('click',async event=>{
     event.preventDefault();
     try{
+      await bridge.activateFromGesture?.();
       await bridge.playQueue(queue,{startIndex:index,source:'universal-search',userGesture:true});
       searchStatus(`يعمل الآن «${track.name}» داخل Asiri Music.`);
     }catch(error){searchStatus(error.message||'تعذر تشغيل الأغنية.')}

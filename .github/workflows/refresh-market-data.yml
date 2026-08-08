@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   refresh:
+    if: github.repository_owner == 'asiricapital'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:

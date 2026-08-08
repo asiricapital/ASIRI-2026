@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {safeResumePosition,upsertHistory} from '../asiri-music-staging/src/listening-history-core.js';
 
 const root=new URL('../asiri-music-staging/',import.meta.url);
 const read=path=>readFile(new URL(path,root),'utf8');
@@ -53,7 +54,7 @@ test('Now Playing is wired to the in-app player with seek and taste controls',as
 test('continuous playback sends the remaining Asiri queue to Spotify',async()=>{
   const engine=await read('src/playback-engine-v2.js');
   assert.match(engine,/this\.queue\.slice\(this\.index\)\.map/);
-  assert.match(engine,/JSON\.stringify\(\{uris,position_ms:0\}\)/);
+  assert.match(engine,/JSON\.stringify\(\{uris,position_ms:startPosition\}\)/);
   assert.doesNotMatch(engine,/uris:\[track\.uri/);
   assert.match(engine,/التشغيل المستمر مفعّل/);
 });
@@ -67,4 +68,29 @@ test('Now Playing exposes an interactive Up Next queue inside Asiri',async()=>{
   assert.match(nowPlaying,/asiri:queue-changed/);
   assert.match(nowPlaying,/source:'now-playing-up-next'/);
   assert.match(library,/sessionAction\('▶ تشغيل هنا','session-play'/);
+});
+
+test('listening history keeps recent tracks unique and clamps resume points safely',()=>{
+  const track=id=>({id,name:'Track '+id,uri:'spotify:track:'+id,artists:[{name:'Artist'}],album:{name:'Album',images:[]}});
+  let items=upsertHistory([],track('a'),1000);
+  items=upsertHistory(items,track('b'),2000);
+  items=upsertHistory(items,track('a'),3000);
+  assert.deepEqual(items.map(item=>item.id),['a','b']);
+  assert.equal(items[0].listenedAt,3000);
+  assert.equal(safeResumePosition(3500,180000),0);
+  assert.equal(safeResumePosition(65000,180000),65000);
+  assert.equal(safeResumePosition(175000,180000),0);
+});
+
+test('Continue Listening resumes the Asiri queue from its saved position',async()=>{
+  const html=await read('index.html');
+  const app=await read('src/app.js');
+  const engine=await read('src/playback-engine-v2.js');
+  const history=await read('src/listening-history.js');
+  assert.match(html,/id="continueListeningContent"/);
+  assert.match(html,/src\/listening-history\.js/);
+  assert.match(app,/positionMs=0/);
+  assert.match(engine,/position_ms:startPosition/);
+  assert.match(history,/source:'resume-history'/);
+  assert.match(history,/asiri:open-now-playing/);
 });

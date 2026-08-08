@@ -278,11 +278,17 @@ window.addEventListener('asiri:session-load',event=>{
   if(message)message.textContent='تم تحميل الجلسة المحفوظة. يمكنك تعديل ترتيبها أو حذف أغنيات منها.';
 });
 
-window.addEventListener('asiri:more-like-this',event=>generateSimilarSession(event.detail?.track));
-window.addEventListener('asiri:ai-dj-prompt',event=>{
-  const prompt=normalizePrompt(event.detail?.prompt);
+function generatePromptSession(rawPrompt){
+  const prompt=normalizePrompt(rawPrompt);
   if(!prompt)return;
+  if(window.AsiriPendingDjPrompt===prompt)delete window.AsiriPendingDjPrompt;
   window.AsiriMusicOS?.openPage?.('sessions');
-  generateSession({promptOverride:prompt});
-});
-init().catch(error=>console.error('[ASIRI DJ]',error));
+  return generateSession({promptOverride:prompt});
+}
+
+window.addEventListener('asiri:more-like-this',event=>generateSimilarSession(event.detail?.track));
+window.addEventListener('asiri:ai-dj-prompt',event=>generatePromptSession(event.detail?.prompt));
+init().then(()=>{
+  const pending=window.AsiriPendingDjPrompt;
+  if(pending)generatePromptSession(pending);
+}).catch(error=>console.error('[ASIRI DJ]',error));

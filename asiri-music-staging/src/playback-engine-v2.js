@@ -85,6 +85,7 @@ class AsiriPlaybackEngineV2 extends EventTarget{
   }
 
   async activateFromGesture(){
+    if(this.player?.activateElement)return this.player.activateElement();
     await this.connect();
     if(this.player?.activateElement)await this.player.activateElement();
   }
@@ -171,6 +172,12 @@ class AsiriPlaybackEngineV2 extends EventTarget{
     await this.activateFromGesture();
     if(!this.player)throw new Error('المشغل غير جاهز');
     return this.player.togglePlay();
+  }
+
+  async seek(positionMs){
+    await this.connect();
+    if(!this.player)throw new Error('المشغل غير جاهز');
+    return this.player.seek(Math.max(0,Number(positionMs)||0));
   }
 
   getQueue(){return [...this.queue]}

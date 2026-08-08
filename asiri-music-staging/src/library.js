@@ -127,9 +127,9 @@ function createLibraryTrackCard(track){
   actions.className='library-track-actions';
   const play=document.createElement('button');
   play.type='button';
-  play.textContent='▶ تشغيل في Spotify';
-  play.addEventListener('click',()=>{
-    try{bridge.openTrack(track)}
+  play.textContent='▶ تشغيل هنا';
+  play.addEventListener('click',async()=>{
+    try{await bridge.activateFromGesture?.();await bridge.playQueue([track],{startIndex:0,source:'library',userGesture:true})}
     catch(error){setLibraryStatus(error.message||'تعذر فتح الأغنية.')}
   });
   const open=document.createElement('a');
@@ -318,8 +318,9 @@ function openSessionForEdit(session){
 async function playSavedSession(session){
   try{
     if(!session.tracks?.length)throw new Error('هذه الجلسة فارغة.');
-    setSessionStatus('جارٍ فتح أول أغنية من «'+session.name+'» في Spotify…');
-    await bridge.playQueue(session.tracks,{startIndex:0,source:'saved-session'});
+    setSessionStatus('جارٍ تشغيل «'+session.name+'» داخل Asiri Music…');
+    await bridge.activateFromGesture?.();
+    await bridge.playQueue(session.tracks,{startIndex:0,source:'saved-session',userGesture:true});
   }catch(error){
     console.error('[Saved Sessions play]',error);
     setSessionStatus(error.message||'تعذر تشغيل الجلسة.');

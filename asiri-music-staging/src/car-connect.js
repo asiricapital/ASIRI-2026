@@ -135,7 +135,8 @@ async function openFirstTrack(){
   if(!state.queue.length){setDriverStatus('Smart Queue فارغة.',false);return}
   try{
     setDriverStatus('جارٍ فتح أول أغنية في Spotify…');
-    await bridge.playQueue(state.queue,{startIndex:0,source:'driver-mode',userGesture:true});
+    bridge.replaceQueue?.(state.queue,{startIndex:0,source:'driver-mode'});
+    bridge.openTrackNative(state.queue[0],0);
   }catch(error){
     console.error('[Driver Mode open]',error);
     setDriverStatus(error.message||'تعذر فتح Spotify الآن.',false);

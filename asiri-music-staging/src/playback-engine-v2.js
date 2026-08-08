@@ -1,4 +1,5 @@
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const FALLBACK_QUEUE_WINDOW=8;
 
 class AsiriPlaybackEngineV2 extends EventTarget{
   constructor({getToken,api,onStatus=()=>{},onHealth=()=>{}}){
@@ -123,6 +124,47 @@ class AsiriPlaybackEngineV2 extends EventTarget{
     return deviceId;
   }
 
+  trackUri(track){
+    const id=String(track?.id||'').trim();
+    const uri=String(track?.uri||'').trim();
+    if(/^spotify:track:[A-Za-z0-9]+$/.test(uri))return uri;
+    return /^[A-Za-z0-9]+$/.test(id)?`spotify:track:${id}`:'';
+  }
+
+  async startPlayback(deviceId,uris,startPosition){
+    const endpoint='/me/player/play?device_id='+encodeURIComponent(deviceId);
+    try{
+      await this.api(endpoint,{
+        method:'PUT',
+        body:JSON.stringify({uris,position_ms:startPosition})
+      });
+      return {mode:'continuous',queued:uris.length};
+    }catch(error){
+      const status=Number(error?.status)||0;
+      if(uris.length<2||(status!==400&&status!==403))throw error;
+
+      const selectedUri=uris[0];
+      console.warn('[Playback Engine v2] queue batch rejected; retrying selected track safely',error);
+      await this.api(endpoint,{
+        method:'PUT',
+        body:JSON.stringify({uris:[selectedUri],position_ms:startPosition})
+      });
+
+      let queued=1;
+      for(const uri of uris.slice(1,1+FALLBACK_QUEUE_WINDOW)){
+        try{
+          await this.api('/me/player/queue?uri='+encodeURIComponent(uri)+'&device_id='+encodeURIComponent(deviceId),{method:'POST'});
+          queued++;
+        }catch(queueError){
+          const queueStatus=Number(queueError?.status)||0;
+          console.warn('[Playback Engine v2] skipped unavailable fallback queue item',queueError);
+          if(queueStatus===401||queueStatus===429||queueStatus>=500)break;
+        }
+      }
+      return {mode:'resilient',queued};
+    }
+  }
+
   async recover(){
     this.deviceId='';
     this.generation++;
@@ -149,14 +191,14 @@ class AsiriPlaybackEngineV2 extends EventTarget{
       for(let attempt=1;attempt<=2;attempt++){
         try{
           const deviceId=await this.prepareDevice();
-          const uris=this.queue.slice(this.index).map(item=>item.uri||`spotify:track:${item.id}`);
+          const uris=this.queue.slice(this.index).map(item=>this.trackUri(item)).filter(Boolean);
+          if(!uris.length)throw new Error('لا توجد أغنيات صالحة لبدء التشغيل');
           const startPosition=Math.max(0,Number(positionMs)||0);
-          await this.api('/me/player/play?device_id='+encodeURIComponent(deviceId),{
-            method:'PUT',
-            body:JSON.stringify({uris,position_ms:startPosition})
-          });
+          const playback=await this.startPlayback(deviceId,uris,startPosition);
+          const playbackLabel=playback.mode==='continuous'?'التشغيل المستمر مفعّل':'وضع التشغيل الموثوق مفعّل';
           this.onHealth(true,'Playback Engine v2 يعمل');
-          this.onStatus(`يعمل الآن: ${track.name} — ${this.index+1} من ${this.queue.length} • التشغيل المستمر مفعّل`);
+          this.onStatus(`يعمل الآن: ${track.name} — ${this.index+1} من ${this.queue.length} • ${playbackLabel}`);
+          this.emit('queue-mode',{mode:playback.mode,queued:playback.queued,total:uris.length});
           return track;
         }catch(error){
           lastError=error;

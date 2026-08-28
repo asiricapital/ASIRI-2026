@@ -39,11 +39,11 @@ test('Music OS loads the isolated YouTube hub and preserves the Spotify engine',
   const hub=await read('src/youtube-hub.js');
   const css=await read('youtube-hub.css');
   assert.match(shell,/youtube-hub\.js\?v=20260829-youtube-v1/);
-  assert.match(hub,/data-os-page='youtube'|dataset\.osPage='youtube'/);
+  assert.match(hub,/dataset\.osPage='youtube'/);
   assert.match(hub,/Spotify \+ YouTube/);
   assert.match(hub,/youtube-nocookie|youtubeEmbedUrl/);
-  assert.match(hub,/data\.osTarget='youtube'/);
-  assert.match(hub,/data\.openPage='youtube'/);
+  assert.match(hub,/button\.dataset\.osTarget='youtube'/);
+  assert.match(hub,/quick\.dataset\.openPage='youtube'/);
   assert.match(css,/\.youtube-hub-card/);
   assert.doesNotMatch(hub,/api\.youtube\.com|googleapis\.com\/youtube/);
 });

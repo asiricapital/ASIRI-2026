@@ -11,6 +11,7 @@ export function getYoutubeToken(){try{const data=JSON.parse(sessionStorage.getIt
 export function getYoutubeChannel(){try{return JSON.parse(localStorage.getItem(CHANNEL_KEY)||'null')}catch{return null}}
 function saveToken(response){const expiresIn=Math.max(60,Number(response.expires_in)||3600);const data={access_token:response.access_token,scope:response.scope||SCOPE,expiresAt:Date.now()+(expiresIn-30)*1000};sessionStorage.setItem(TOKEN_KEY,JSON.stringify(data));return data}
 function saveChannel(channel){if(channel)localStorage.setItem(CHANNEL_KEY,JSON.stringify(channel));else localStorage.removeItem(CHANNEL_KEY)}
+function emitAuthChanged(detail){window.dispatchEvent(new CustomEvent('asiri:youtube-auth-changed',{detail}))}
 
 function loadGoogleIdentity(){
   if(window.google?.accounts?.oauth2)return Promise.resolve(window.google);
@@ -44,7 +45,7 @@ export async function signInYouTube(){
       scope:SCOPE,
       callback:async response=>{
         if(response?.error)return reject(new Error(response.error));
-        try{const token=saveToken(response);const channel=await fetchChannel(token.access_token);resolve({token,channel})}catch(error){reject(error)}
+        try{const token=saveToken(response);const channel=await fetchChannel(token.access_token);emitAuthChanged({signedIn:true,channel});resolve({token,channel})}catch(error){reject(error)}
       },
       error_callback:error=>reject(new Error(error?.type||'GOOGLE_OAUTH_FAILED'))
     });
@@ -52,10 +53,10 @@ export async function signInYouTube(){
   });
 }
 
-export async function refreshYoutubeChannel(){const token=getYoutubeToken();if(!token)return getYoutubeChannel();try{return await fetchChannel(token.access_token)}catch{return getYoutubeChannel()}}
+export async function refreshYoutubeChannel(){const token=getYoutubeToken();if(!token)return getYoutubeChannel();try{const channel=await fetchChannel(token.access_token);emitAuthChanged({signedIn:true,channel});return channel}catch{return getYoutubeChannel()}}
 export function signOutYouTube(){
   const token=getYoutubeToken();
   if(token?.access_token&&window.google?.accounts?.oauth2?.revoke)window.google.accounts.oauth2.revoke(token.access_token,()=>{});
-  sessionStorage.removeItem(TOKEN_KEY);saveChannel(null);return true;
+  sessionStorage.removeItem(TOKEN_KEY);saveChannel(null);emitAuthChanged({signedIn:false,channel:null});return true;
 }
 export function isYoutubeSignedIn(){return Boolean(getYoutubeToken()&&getYoutubeChannel())}

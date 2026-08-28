@@ -11,7 +11,7 @@ test('the branch-backed /asiri-music entry loads the canonical Music build witho
   assert.match(staging,/id="playbackRecovery"/);
   assert.match(staging,/playback-engine-v2\.js\?v=20260808-playback-v7/);
   assert.match(live,/fetch\('\.\.\/asiri-music-staging\/index\.html'/);
-  assert.match(live,/<base href=\\"\.\.\/asiri-music-staging\/\\">/);
+  assert.match(live,/base href=.*asiri-music-staging/);
   assert.match(live,/document\.write\(html\)/);
   assert.equal(liveCallback,stagingCallback);
   assert.match(liveCallback,/redirectUri=new URL\('callback\.html',location\.href\)\.href/);

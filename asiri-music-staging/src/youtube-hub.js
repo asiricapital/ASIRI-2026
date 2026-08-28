@@ -35,7 +35,7 @@ function wire(){
   $('#youtubeClosePlayer')?.addEventListener('click',closeVideo);
   $('#youtubeSaveKey')?.addEventListener('click',()=>{const value=$('#youtubeApiKeyInput')?.value||'';setYoutubeApiKey(value);if($('#youtubeApiKeyInput'))$('#youtubeApiKeyInput').value='';updateKeyState();$('#youtubeStatus').textContent=value?'تم ربط YouTube Search على هذا الجهاز.':'تم إزالة ربط YouTube Search.'});
   $('#youtubeSearchForm')?.addEventListener('submit',event=>{event.preventDefault();openSearch($('#youtubeSearchInput')?.value)});
-  document.querySelectorAll('[data-youtube-query]').forEach(button=>button.addEventListener('click',()=>{if($('#youtubeSearchInput'))$('#youtubeSearchInput'].value=button.dataset.youtubeQuery;openSearch(button.dataset.youtubeQuery)}));
+  document.querySelectorAll('[data-youtube-query]').forEach(button=>button.addEventListener('click',()=>{const input=$('#youtubeSearchInput');if(input)input.value=button.dataset.youtubeQuery;openSearch(button.dataset.youtubeQuery)}));
   $('#youtubeClearHistory')?.addEventListener('click',()=>{writeHistory([]);renderHistory()});
 }
 function init(){ensureStyle();injectPage();wire();renderHistory();updateKeyState()}

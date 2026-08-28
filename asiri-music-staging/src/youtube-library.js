@@ -4,6 +4,7 @@ const $=selector=>document.querySelector(selector);
 const CACHE_KEY='asiri-music.youtube.library.v1';
 let state={liked:[],playlists:[],subscriptions:[],syncedAt:0,busy:false};
 
+function ensureStyle(){if(document.querySelector('link[data-asiri-unified-library]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='unified-library.css?v=20260829-v1';link.dataset.asiriUnifiedLibrary='1';document.head.appendChild(link)}
 function api(path,params={}){
   const token=getYoutubeToken();
   if(!token?.access_token)throw new Error('YOUTUBE_SIGN_IN_REQUIRED');
@@ -94,6 +95,6 @@ function wire(){
   document.querySelectorAll('[data-youtube-library-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-youtube-library-tab]').forEach(item=>item.classList.toggle('is-active',item===button));render()}));
   window.addEventListener('asiri:youtube-auth-changed',()=>sync({silent:true}));
 }
-function init(){inject();const cached=readCache();if(cached)state={...state,...cached,busy:false};wire();render();if(isYoutubeSignedIn())sync({silent:true})}
+function init(){ensureStyle();inject();const cached=readCache();if(cached)state={...state,...cached,busy:false};wire();render();if(isYoutubeSignedIn())sync({silent:true})}
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
 window.AsiriYouTubeLibrary={sync,getState:()=>({...state})};

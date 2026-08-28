@@ -1,5 +1,6 @@
 import {QUICK_MOMENTS,momentForHour,personalizeMomentPrompt} from './moment-core.js?v=20260808-moment-v1';
 import './home-intelligence.js?v=20260828-v1';
+import './youtube-hub.js?v=20260829-youtube-v1';
 
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];

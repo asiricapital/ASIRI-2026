@@ -32,3 +32,15 @@ test('YouTube discovery can render official API results inside Asiri and play th
   assert.match(hub,/playVideo\(video\.id,video\.title\)/);
   assert.match(hub,/window\.AsiriYouTubeHub/);
 });
+
+test('AI DJ routes concert and video intents to YouTube when search is connected',async()=>{
+  const router=await read('src/ai-dj-source-router.js');
+  const provider=await read('src/youtube-search-provider.js');
+  const shell=await read('src/os-shell.js');
+  assert.match(router,/prefersYoutube/);
+  assert.match(router,/hasYoutubeSearchKey/);
+  assert.match(router,/searchYouTubeVideos/);
+  assert.match(router,/AsiriYouTubeHub\?\.playVideo/);
+  assert.match(provider,/حفلة|حفله/);
+  assert.match(shell,/ai-dj-source-router\.js/);
+});

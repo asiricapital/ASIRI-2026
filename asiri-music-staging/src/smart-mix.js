@@ -67,7 +67,7 @@ function renderTracks(){
 function render(){renderSeeds();renderTracks()}
 
 async function buildMix(){
-  if(state.busy||!bridge)return;
+  if(state.busy||!bridge)return state.tracks;
   const button=$('#smartMixGenerate');
   state.busy=true;
   if(button){button.disabled=true;button.textContent='جارٍ بناء مزيجك…'}
@@ -87,6 +87,7 @@ async function buildMix(){
     bridge.setStorage(CACHE_KEY,{tracks:state.tracks,seeds:state.seeds,generatedAt:state.generatedAt});
     render();
     setStatus('مزيجك جاهز — '+state.tracks.length+' أغنية مرتبة من ذوقك واستماعك الأخير.');
+    window.dispatchEvent(new CustomEvent('asiri:smart-mix-updated',{detail:{tracks:[...state.tracks],seeds:[...state.seeds],generatedAt:state.generatedAt}}));
   }catch(error){
     console.error('[Smart Mix build]',error);
     setStatus(error.message==='AUTH_REQUIRED'?'سجّل الدخول إلى Spotify أولًا لإنشاء مزيجك.':(error.message||'تعذر إنشاء المزيج الآن.'));
@@ -94,19 +95,29 @@ async function buildMix(){
     state.busy=false;
     if(button){button.disabled=false;button.textContent=state.tracks.length?'↻ تحديث مزيجي':'✨ أنشئ مزيجي'}
   }
+  return state.tracks;
 }
 
 async function playMix(startIndex=0){
-  if(!state.tracks.length)return;
+  if(!state.tracks.length)return false;
   try{
     await bridge.activateFromGesture?.();
     await bridge.playQueue(state.tracks,{startIndex,source:'smart-mix',userGesture:true});
     window.dispatchEvent(new Event('asiri:open-now-playing'));
     setStatus('يعمل مزيجك الآن داخل Asiri Music.');
+    return true;
   }catch(error){
     console.error('[Smart Mix play]',error);
     setStatus(error.message||'تعذر تشغيل المزيج.');
+    return false;
   }
+}
+
+async function playOrBuildMix(){
+  if(!bridge)bridge=await waitForBridge();
+  if(!state.tracks.length)await buildMix();
+  if(!state.tracks.length)return false;
+  return playMix(0);
 }
 
 function openAsSession(){
@@ -132,6 +143,8 @@ async function init(){
   $('#smartMixPlay')?.addEventListener('click',()=>playMix(0));
   $('#smartMixSession')?.addEventListener('click',openAsSession);
   window.addEventListener('asiri:taste-updated',()=>{renderSeeds();setStatus('تغيّر ملف ذوقك — حدّث المزيج للحصول على ترتيب أحدث.')});
+  window.addEventListener('asiri:smart-mix-play-request',()=>playOrBuildMix());
 }
 
+window.AsiriSmartMix={build:buildMix,play:playMix,playOrBuild:playOrBuildMix,getTracks:()=>[...state.tracks]};
 init();

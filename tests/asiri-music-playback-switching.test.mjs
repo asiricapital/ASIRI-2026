@@ -21,7 +21,7 @@ test('playback preparation keeps the ready Asiri device active instead of pausin
   const Engine=await loadEngine(),calls=[];
   const engine=new Engine({getToken:async()=>'token',api:async(...args)=>{calls.push(args)}});
   engine.connect=async()=>'asiri-device';
-  engine.waitUntilDeviceVisible=async()=>true;
+  engine.waitUntilDeviceVisible=async()=>({id:'asiri-device',is_active:true,is_restricted:false});
   assert.equal(await engine.prepareDevice(),'asiri-device');
   assert.equal(calls.length,0);
 });

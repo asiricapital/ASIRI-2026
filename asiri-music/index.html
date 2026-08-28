@@ -5,113 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07110a">
   <title>Asiri Music OS</title>
-  <base href="../asiri-music-staging/">
-  <link rel="stylesheet" href="styles.css?v=20260802-0010">
-  <link rel="stylesheet" href="session-controls.css?v=20260802-0010">
-  <link rel="stylesheet" href="car-connect.css?v=20260808-driver-v1">
-  <link rel="stylesheet" href="os-shell.css?v=20260802-0010">
-  <link rel="stylesheet" href="moment.css?v=20260808-moment-v1">
-  <link rel="stylesheet" href="stable-web.css?v=20260802-0010">
-  <link rel="stylesheet" href="library.css?v=20260807-library-v1">
-  <link rel="stylesheet" href="now-playing.css?v=20260808-ai-dj-v2">
-  <link rel="stylesheet" href="listening-history.css?v=20260808-history-v1">
-  <link rel="stylesheet" href="smart-mix.css?v=20260808-smartmix-v1">
-  <link rel="stylesheet" href="search.css?v=20260808-universal-v1">
-  <style>.car-native-card button{width:100%;border:0;border-radius:18px;background:#1ed760;color:#041006;font-weight:900;padding:15px 18px;font-size:16px}.car-native-card button:disabled{opacity:.55}</style>
+  <style>
+    html,body{margin:0;min-height:100%;background:#07110a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{display:grid;place-items:center;padding:24px;box-sizing:border-box}
+    .boot{max-width:420px;text-align:center}.boot strong{display:block;font-size:24px;margin-bottom:10px}.boot span{color:#9faf9f;line-height:1.8}
+  </style>
 </head>
 <body>
-  <main class="shell">
-    <header class="os-header"><div class="os-brand"><div class="os-logo">A</div><div><h1>Asiri Music OS</h1><small>منصتك الموسيقية الذكية</small></div></div><button id="loginButton">الدخول عبر Spotify</button></header>
-
-    <section class="os-page is-active" data-os-page="home">
-      <div class="os-hero"><span class="eyebrow">ASIRI MUSIC</span><h2 id="osGreeting">مرحبًا أحمد</h2><p>ابحث، كوّن جلستك، واستمع داخل Asiri Music من مكان واحد.</p></div>
-      <div class="web-playback-note"><strong>🎧 الاستماع داخل Asiri Music</strong>المشغل الداخلي يعمل مباشرة من حساب Spotify Premium ويظهر أسفل المنصة أثناء الاستماع.<span>يستخدم صلاحيات Spotify Web Playback المعتمدة في حسابك. وضع السيارة يبقى مستقلاً عبر Spotify لضمان التحكم أثناء القيادة.</span></div>
-      <div class="os-quick-grid"><button class="os-quick" data-open-page="sessions"><span>✨</span>إنشاء جلسة ذكية</button><button class="os-quick" data-open-page="search"><span>⌕</span>بحث موسيقي</button><button class="os-quick" data-open-page="car"><span>🚗</span>تجهيز جلسة السيارة</button><button class="os-quick" data-open-page="library"><span>♥</span>مكتبتي</button></div>
-      <section id="asiriMoment" class="asiri-moment" aria-labelledby="osMomentTitle">
-        <div class="asiri-moment-head"><span class="eyebrow">ASIRI MOMENT • LIVE</span><span class="asiri-moment-live"><i aria-hidden="true"></i><span id="osMomentClock">الآن</span></span></div>
-        <div class="asiri-moment-copy"><span id="osMomentEmoji" class="asiri-moment-emoji" aria-hidden="true">🌙</span><div><span id="osMomentEyebrow" class="eyebrow">مزاجك الآن</span><h3 id="osMomentTitle">لحظتك بصوت يناسبها</h3><p id="osMomentDescription">ASIRI يقرأ وقتك وذوقك ويجهز جلسة مناسبة بضغطة واحدة.</p></div></div>
-        <button id="osMomentPrimary" class="asiri-moment-primary" type="button">✨ اصنع لحظتي الآن</button>
-        <div class="asiri-moment-presets" aria-label="لحظات جاهزة"><button type="button" data-quick-moment>☀️ صباح</button><button type="button" data-quick-moment>☕ قهوة</button><button type="button" data-quick-moment>🚗 طريق</button><button type="button" data-quick-moment>🌙 ليل</button></div>
-      </section>
-      <div class="listening-grid"><section class="listening-panel"><div class="listening-panel-head"><div><span class="eyebrow">CONTINUE LISTENING</span><h3>متابعة الاستماع</h3></div><span>من نفس النقطة</span></div><div id="continueListeningContent" class="listening-empty">ابدأ الاستماع داخل Asiri وسنحفظ آخر نقطة لك هنا.</div></section><section class="listening-panel"><div class="listening-panel-head"><div><span class="eyebrow">LISTEN AGAIN</span><h3>استمع مجددًا</h3></div><span id="recentListeningCount">جديد</span></div><div id="recentListeningList" class="recent-listening-list"></div><div id="recentListeningEmpty" class="listening-empty">ستظهر هنا آخر الأغاني التي استمعت إليها داخل Asiri.</div></section></div>
-      <section id="smartMixPanel" class="os-panel smart-mix-panel"><div class="smart-mix-head"><div><span class="eyebrow">FOR YOU • ASIRI SMART MIX</span><h3>مزيج أحمد</h3><p>مزيج شخصي يتغير مع إعجاباتك وآخر ما استمعت إليه، ويعمل كاملًا داخل Asiri Music.</p></div><button id="smartMixGenerate" type="button">✨ أنشئ مزيجي</button></div><div id="smartMixSeeds" class="smart-mix-seeds"></div><div class="os-panel-head"><span id="smartMixCount">مزيج شخصي</span></div><div id="smartMixPreview" class="smart-mix-preview"></div><div class="smart-mix-actions"><button id="smartMixPlay" class="smart-mix-play" type="button" disabled>▶ تشغيل المزيج هنا</button><button id="smartMixSession" class="smart-mix-session" type="button" disabled>فتح كجلسة</button><span id="smartMixStatus" class="smart-mix-status" aria-live="polite">جارٍ تجهيز Smart Mix…</span></div></section>
-      <div class="os-panel"><div class="os-panel-head"><h3>ملخصك الموسيقي</h3><span class="eyebrow">LIVE PROFILE</span></div><div class="os-dashboard-grid"><article class="os-stat"><span>الأغاني المعجبة</span><strong id="osLikeCount">0</strong></article><article class="os-stat"><span>فنانون مفضلون</span><strong id="osArtistCount">0</strong></article><article class="os-stat"><span>أغاني آخر جلسة</span><strong id="osSessionCount">0</strong></article><article id="osLastSession" class="os-stat"><span>آخر جلسة</span><strong>لا توجد</strong></article></div></div><div id="homeMount"></div>
-    </section>
-
-    <section class="os-page" data-os-page="search">
-      <div class="os-section-title"><div><h2>البحث الذكي الشامل</h2><p>ابحث بأي كلمة: أغنية، فنان، ألبوم، قائمة، شيلات، موالات أو طلب كامل.</p></div><span>⌕</span></div>
-      <div id="searchMount"><section id="searchModule" class="card hero"><div><span class="eyebrow">UNIVERSAL SMART SEARCH</span><h2>ابحث عن كل ما تريد</h2><p>مثال: شيلات، طرب سعودي، أجمل موالات محمد عبده، أو اسم أغنية فقط.</p><div class="search-scope"><span>🎵 أغاني</span><span>🎤 فنانون</span><span>💿 ألبومات</span><span>♫ قوائم Spotify</span></div></div><form id="searchForm"><input id="searchInput" type="search" autocomplete="off" placeholder="اكتب أي شيء تريد سماعه…"><button>بحث</button></form><p id="searchStatusText" class="search-status" aria-live="polite">ابحث في كامل كتالوج Spotify الموسيقي.</p><p id="statusText" class="hidden" aria-live="polite"></p></section><section id="resultsModule"><div class="section-head"><h2>النتائج الشاملة</h2><span id="resultCount"></span></div><div id="results"></div></section></div>
-    </section>
-
-    <section class="os-page" data-os-page="sessions">
-      <div class="os-section-title"><div><h2>الجلسات</h2><p>أنشئ الجلسة وعدّل ترتيبها ثم استمع إليها هنا.</p></div><span>✨</span></div>
-      <div id="sessionsMount"><section id="aiDjCard" class="card ai-dj-card"><div class="section-head"><div><span class="eyebrow">ASIRI AI DJ</span><h2>اصنع جلستك بالكلمات</h2></div><span id="aiDjCount"></span></div><p class="muted">اكتب طلبك بطريقتك؛ ASIRI DJ يفهم الفنانين والجو والسياق والمدة ثم يرتب الجلسة حسب ذوقك.</p><div class="ai-dj-form"><input id="aiDjPrompt" placeholder="مثال: سفر ليلي، محمد عبده وراشد، هادئة ساعة ونصف"><button id="aiDjGenerate" type="button">✨ إنشاء الجلسة</button></div><div class="ai-presets"><button type="button" data-ai-preset="جلسة قهوة خليجية هادئة">☕ قهوة</button><button type="button" data-ai-preset="رحلة ليلية وطريق طويل">🚗 سفر</button><button type="button" data-ai-preset="طرب سعودي قديم">🎻 طرب</button><button type="button" data-ai-preset="أغاني خليجية حماسية">🔥 حماس</button></div><p id="aiDjIntent" class="muted" aria-live="polite"></p><p id="aiDjStatus" class="muted">اكتب طلبك أو اختر جلسة جاهزة.</p><div id="aiDjPreview" class="ai-dj-preview"></div><div class="session-primary-actions"><button id="aiDjPlay" class="ai-dj-play" type="button">▶ تشغيل الجلسة هنا</button><button id="saveCurrentSession" type="button">♡ حفظ الجلسة</button></div><p id="saveSessionStatus" aria-live="polite"></p></section></div>
-    </section>
-
-    <section class="os-page" data-os-page="library">
-      <div class="os-section-title"><div><h2>مكتبتي</h2><p>أغانيك المفضلة وجلساتك محفوظة في مكان واحد.</p></div><span>♥</span></div>
-      <div class="library-overview">
-        <article class="library-metric"><span>الجلسات المحفوظة</span><strong id="savedSessionsMetric">0</strong></article>
-        <article class="library-metric"><span>أغاني المكتبة</span><strong id="libraryTrackMetric">0</strong></article>
-      </div>
-      <div class="os-panel">
-        <div class="os-panel-head"><div><h3>الجلسات المحفوظة</h3></div><span id="savedSessionsCount" class="library-count">0 جلسة</span></div>
-        <div id="savedSessionsList" class="saved-session-grid"></div>
-        <div id="savedSessionsEmpty" class="os-empty library-empty">لا توجد جلسات محفوظة بعد. أنشئ جلسة من AI DJ ثم اضغط «حفظ الجلسة».</div>
-      </div>
-      <div class="os-panel">
-        <div class="os-panel-head">
-          <div><h3>الأغاني المفضلة</h3><span id="libraryLikesLabel" class="muted">إعجابات Asiri + الأغاني المحفوظة في Spotify</span></div>
-          <div class="library-panel-actions"><span id="libraryTrackCount" class="library-count">0 أغنية</span><button id="syncSpotifyLibrary" class="library-sync" type="button">↻ مزامنة Spotify</button></div>
-        </div>
-        <div class="library-search-row"><input id="librarySearch" class="library-search" type="search" autocomplete="off" placeholder="ابحث داخل مكتبتك باسم الأغنية أو الفنان"></div>
-        <p id="librarySyncStatus" class="library-status" aria-live="polite"></p>
-        <div id="libraryTracks" class="library-track-grid"></div>
-        <div id="libraryTracksEmpty" class="os-empty library-empty">لا توجد أغنيات في المكتبة بعد.</div>
-      </div>
-    </section>
-
-    <section class="os-page" data-os-page="car"><div class="os-section-title"><div><h2>Smart Queue + Driver Mode</h2><p>جهّز ترتيب الأغاني قبل القيادة ثم أكمل التحكم من Spotify أو أزرار السيارة.</p></div><span>🚗</span></div><div class="os-panel"><div class="os-panel-head"><h3>مسار التشغيل الموثوق</h3><span class="eyebrow">SPOTIFY NATIVE</span></div><p class="muted">لا يعتمد وضع السيارة على Web Playback. رتّب Smart Queue هنا ثم افتح الجلسة داخل Spotify.</p></div><div id="carMount"></div></section>
-
-    <section class="os-page" data-os-page="settings"><div class="os-section-title"><div><h2>الإعدادات</h2><p>حالة النظام والحساب والإصدار.</p></div><span>⚙</span></div><div id="settingsMount" class="os-settings-list"><div class="os-setting"><div><strong>بيئة التشغيل</strong><span>النسخة الحية عبر GitHub Pages</span></div><b>Live</b></div><div class="os-setting"><div><strong>وضع التشغيل</strong><span>Web Playback داخل Asiri + Spotify Native للسيارة</span></div><b>Hybrid</b></div><div class="os-setting"><div><strong>الإصدار</strong><span>Asiri Music OS — ASIRI MOMENT</span></div><b>1.9</b></div><div class="os-setting"><div><strong>حفظ البيانات</strong><span>الذوق وسجل الاستماع وSmart Mix محفوظة محليًا على جهازك</span></div><b>Private</b></div></div></section>
-
-    <section id="healthCard" class="card health-card"><div><span class="eyebrow">System Health</span><h2>حالة النظام</h2></div><strong id="healthStatus">جارٍ الفحص…</strong></section>
-    <section id="profileCard" class="card hidden"><strong id="profileName"></strong><span id="profilePlan"></span></section>
-    <section id="tasteDashboard" class="card taste-dashboard"><div class="taste-head"><div><span class="eyebrow">TASTE ENGINE</span><h2>ملف ذوق أحمد</h2></div><div class="taste-score"><strong id="tasteScore">0</strong><span>/100</span></div></div><p id="tasteSummary" class="muted">ابدأ بتقييم الأغاني حتى يتعلم التطبيق ذوقك.</p><div class="taste-stats"><article><span>أعجبتني</span><strong id="tasteLikes">0</strong></article><article><span>مستبعدة</span><strong id="tasteDislikes">0</strong></article><article><span>فنانون معروفون</span><strong id="tasteArtists">0</strong></article></div><div class="taste-top"><h3>الفنانون الأقرب لذوقك</h3><div id="tasteTopArtists"></div></div></section>
-  </main>
-
-  <nav class="os-bottom-nav" aria-label="التنقل الرئيسي"><button class="os-nav-button is-active" data-os-target="home"><b>⌂</b>الرئيسية</button><button class="os-nav-button" data-os-target="search"><b>⌕</b>البحث</button><button class="os-nav-button" data-os-target="sessions"><b>✨</b>الجلسات</button><button class="os-nav-button" data-os-target="library"><b>♥</b>المكتبة</button><button class="os-nav-button" data-os-target="car"><b>🚗</b>السيارة</button><button class="os-nav-button" data-os-target="settings"><b>⚙</b>الإعدادات</button></nav>
-
-  <aside id="playerBar" class="player hidden" aria-label="مشغل Asiri Music"><button id="openNowPlaying" class="player-cover-button" type="button" aria-label="فتح شاشة التشغيل"><img id="playerCover" alt="غلاف الأغنية الحالية"></button><div><strong id="playerTitle">اختر أغنية</strong><span id="playerArtist"></span><span class="player-progress"><i id="playerProgress"></i></span></div><button id="prevButton" type="button" aria-label="السابق">⏮</button><button id="playButton" type="button" aria-label="تشغيل أو إيقاف">▶</button><button id="nextButton" type="button" aria-label="التالي">⏭</button></aside>
-
-  <section id="nowPlaying" class="now-playing hidden" aria-label="التشغيل الآن">
-    <div id="nowPlayingBackdrop" class="now-playing-backdrop"></div>
-    <div class="now-playing-content">
-      <header class="now-playing-header"><button id="closeNowPlaying" type="button" aria-label="إغلاق">⌄</button><div><span>يعمل الآن</span><strong>Asiri Music</strong></div><button id="nowFavoriteButton" type="button" aria-label="إضافة للمفضلة">♡</button></header>
-      <div class="now-artwork"><img id="nowCover" alt="غلاف الأغنية"></div>
-      <div class="now-meta"><h2 id="nowTrack">اختر أغنية</h2><p id="nowArtist">Asiri Music Player</p></div>
-      <div class="now-progress-wrap"><input id="nowSeek" type="range" min="0" max="1000" value="0" aria-label="موضع التشغيل"><div class="now-times"><span id="nowPosition">0:00</span><span id="nowDuration">0:00</span></div></div>
-      <div class="now-controls"><button id="nowPrevious" type="button" aria-label="السابق">⏮</button><button id="nowPlayPause" class="now-main-play" type="button" aria-label="تشغيل أو إيقاف">▶</button><button id="nowNext" type="button" aria-label="التالي">⏭</button></div>
-      <div class="now-actions"><button id="nowSave" type="button">♡ أعجبتني</button><button id="nowMoreLikeThis" type="button">✨ المزيد مثل هذه</button><button id="nowQueueToggle" type="button" aria-expanded="false" aria-controls="nowQueuePanel">☷ التالي</button><a id="nowSpotifyLink" target="_blank" rel="noopener">فتح في Spotify</a></div>
-      <section id="nowQueuePanel" class="now-queue-panel hidden" aria-label="قائمة التشغيل التالية"><div class="now-queue-head"><div><span class="eyebrow">UP NEXT</span><h3>التالي في Asiri</h3></div><strong id="nowQueueCount">0 أغنية</strong></div><div id="nowQueueList" class="now-queue-list"></div><div id="nowQueueEmpty" class="now-queue-empty">ابدأ أغنية أو جلسة لعرض القائمة هنا.</div></section>
-      <p id="nowStatus">المشغل جاهز</p>
-    </div>
-  </section>
-  <template id="trackTemplate"><article class="track"><img class="cover" alt=""><div><strong class="name"></strong><span class="artist"></span><small class="album"></small></div><button class="play" type="button">▶ تشغيل هنا</button><a class="open" target="_blank" rel="noopener">عرض في Spotify</a></article></template>
-
-  <script type="module" src="src/os-shell.js?v=20260808-moment-v2"></script>
-  <script type="module" src="src/taste-engine.js?v=20260802-0010"></script>
-  <script>window.onSpotifyWebPlaybackSDKReady=()=>window.dispatchEvent(new Event('asiri:spotify-sdk-ready'));</script>
-  <script src="https://sdk.scdn.co/spotify-player.js"></script>
-  <script src="src/playback-engine-v2.js?v=20260808-playback-v4"></script>
-  <script type="module" src="src/app.js?v=20260808-history-v1"></script>
-  <script type="module" src="src/now-playing.js?v=20260808-ai-dj-v2"></script>
-  <script type="module" src="src/listening-history.js?v=20260808-history-v1"></script>
-  <script type="module" src="src/smart-mix.js?v=20260808-smartmix-v1"></script>
-  <script type="module" src="src/car-connect.js?v=20260808-driver-v1"></script>
-  <script type="module" src="src/car-playlist.js?v=20260808-driver-v1"></script>
-  <script type="module" src="src/precise-search.js?v=20260808-playback-v4"></script>
-  <script type="module" src="src/ai-dj.js?v=20260808-moment-v2"></script>
-  <script type="module" src="src/library.js?v=20260808-continuous-v1"></script>
+  <div class="boot"><strong>Asiri Music OS</strong><span id="bootStatus">جارٍ تحميل النسخة المستقرة…</span></div>
+  <script>
+    (async()=>{
+      try{
+        const response=await fetch('../asiri-music-staging/index.html',{cache:'no-store'});
+        if(!response.ok)throw new Error('HTTP '+response.status);
+        let html=await response.text();
+        html=html.replace('<head>','<head>\n  <base href="../asiri-music-staging/">');
+        document.open();
+        document.write(html);
+        document.close();
+      }catch(error){
+        console.error('[Asiri Music live loader]',error);
+        const status=document.getElementById('bootStatus');
+        if(status)status.textContent='تعذر تحميل المنصة الآن. أعد المحاولة بعد لحظات.';
+      }
+    })();
+  </script>
 </body>
 </html>

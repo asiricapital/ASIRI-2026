@@ -83,10 +83,6 @@ function wire(){
   $('#youtubeSearchForm')?.addEventListener('submit',event=>{event.preventDefault();openSearch($('#youtubeSearchInput')?.value)});
   document.querySelectorAll('[data-youtube-query]').forEach(button=>button.addEventListener('click',()=>openSearch(button.dataset.youtubeQuery)));
   $('#youtubeClearHistory')?.addEventListener('click',()=>{writeHistory([]);renderHistory()});
-  document.querySelectorAll('.os-nav-button,[data-open-page]').forEach(button=>{
-    if(button.dataset.youtubeWired)return;button.dataset.youtubeWired='1';
-    button.addEventListener('click',()=>window.AsiriMusicOS?.openPage?.(button.dataset.osTarget||button.dataset.openPage));
-  });
 }
 
 function init(){ensureStyle();injectPage();wire();renderHistory()}

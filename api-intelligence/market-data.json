@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-15T16:54:11.631456+00:00",
+  "generatedAt": "2026-10-15T21:18:36.466972+00:00",
   "source": {
     "name": "yfinance",
     "version": "1.5.1",
@@ -12,20 +12,20 @@
       "symbol": "AAPL",
       "currency": "USD",
       "latestDate": "2026-10-15",
-      "latestClose": 344.05,
+      "latestClose": 342.0,
       "previousClose": 342.96,
-      "change": 1.09,
-      "changePercent": 0.32,
-      "volume": 19121226,
+      "change": -0.96,
+      "changePercent": -0.28,
+      "volume": 39605715,
       "high20": 348.15,
       "low20": 325.81,
-      "sma20": 337.16,
-      "sma50": 325.1194,
-      "rsi14": 63.09,
-      "avgVolume20": 37282231,
+      "sma20": 337.0575,
+      "sma50": 325.0784,
+      "rsi14": 60.59,
+      "avgVolume20": 38316426,
       "quality": {
         "score": 100.0,
-        "rows": 128,
+        "rows": 127,
         "nullCells": 0,
         "duplicateDatesRemoved": 0,
         "invalidOhlcRows": 0,
@@ -264,15 +264,15 @@
           "high": 347.09,
           "low": 341.72,
           "close": 342.96,
-          "volume": 49861700
+          "volume": 50061100
         },
         {
           "date": "2026-10-15",
           "open": 346.95,
           "high": 347.85,
-          "low": 342.59,
-          "close": 344.05,
-          "volume": 19121226
+          "low": 341.6,
+          "close": 342.0,
+          "volume": 39605715
         }
       ]
     },
@@ -280,20 +280,20 @@
       "symbol": "MSFT",
       "currency": "USD",
       "latestDate": "2026-10-15",
-      "latestClose": 539.74,
+      "latestClose": 539.44,
       "previousClose": 533.69,
-      "change": 6.05,
-      "changePercent": 1.13,
-      "volume": 10867937,
+      "change": 5.75,
+      "changePercent": 1.08,
+      "volume": 23481292,
       "high20": 551.15,
       "low20": 491.1,
-      "sma20": 518.472,
-      "sma50": 504.9546,
-      "rsi14": 65.17,
-      "avgVolume20": 22387247,
+      "sma20": 518.457,
+      "sma50": 504.9486,
+      "rsi14": 65.04,
+      "avgVolume20": 23024090,
       "quality": {
         "score": 100.0,
-        "rows": 128,
+        "rows": 127,
         "nullCells": 0,
         "duplicateDatesRemoved": 0,
         "invalidOhlcRows": 0,
@@ -532,15 +532,15 @@
           "high": 545.75,
           "low": 532.54,
           "close": 533.69,
-          "volume": 22200800
+          "volume": 22324300
         },
         {
           "date": "2026-10-15",
           "open": 533.655,
-          "high": 540.45,
+          "high": 541.1331,
           "low": 531.22,
-          "close": 539.74,
-          "volume": 10867937
+          "close": 539.44,
+          "volume": 23481292
         }
       ]
     },
@@ -548,20 +548,20 @@
       "symbol": "SPY",
       "currency": "USD",
       "latestDate": "2026-10-15",
-      "latestClose": 769.4,
+      "latestClose": 771.79,
       "previousClose": 769.6,
-      "change": -0.2,
-      "changePercent": -0.03,
-      "volume": 21580456,
+      "change": 2.19,
+      "changePercent": 0.28,
+      "volume": 42916599,
       "high20": 781.62,
       "low20": 757.97,
-      "sma20": 770.9865,
-      "sma50": 768.5602,
-      "rsi14": 49.4,
-      "avgVolume20": 40922573,
+      "sma20": 771.106,
+      "sma50": 768.608,
+      "rsi14": 51.81,
+      "avgVolume20": 42006345,
       "quality": {
         "score": 100.0,
-        "rows": 128,
+        "rows": 127,
         "nullCells": 0,
         "duplicateDatesRemoved": 0,
         "invalidOhlcRows": 0,
@@ -800,15 +800,15 @@
           "high": 776.35,
           "low": 766.71,
           "close": 769.6,
-          "volume": 55376100
+          "volume": 55715400
         },
         {
           "date": "2026-10-15",
           "open": 766.25,
-          "high": 771.23,
+          "high": 772.87,
           "low": 764.44,
-          "close": 769.4,
-          "volume": 21580456
+          "close": 771.79,
+          "volume": 42916599
         }
       ]
     },
@@ -816,20 +816,20 @@
       "symbol": "PLUG",
       "currency": "USD",
       "latestDate": "2026-10-15",
-      "latestClose": 1.44,
+      "latestClose": 1.485,
       "previousClose": 1.45,
-      "change": -0.01,
-      "changePercent": -0.69,
-      "volume": 37417456,
+      "change": 0.035,
+      "changePercent": 2.41,
+      "volume": 56360464,
       "high20": 2.17,
       "low20": 1.405,
-      "sma20": 1.839,
-      "sma50": 2.0402,
-      "rsi14": 19.53,
-      "avgVolume20": 48706153,
+      "sma20": 1.8412,
+      "sma50": 2.0411,
+      "rsi14": 23.55,
+      "avgVolume20": 49665948,
       "quality": {
         "score": 100.0,
-        "rows": 128,
+        "rows": 127,
         "nullCells": 0,
         "duplicateDatesRemoved": 0,
         "invalidOhlcRows": 0,
@@ -1068,15 +1068,15 @@
           "high": 1.52,
           "low": 1.42,
           "close": 1.45,
-          "volume": 82601100
+          "volume": 82854000
         },
         {
           "date": "2026-10-15",
           "open": 1.41,
-          "high": 1.48,
+          "high": 1.49,
           "low": 1.405,
-          "close": 1.44,
-          "volume": 37417456
+          "close": 1.485,
+          "volume": 56360464
         }
       ]
     },
@@ -1084,20 +1084,20 @@
       "symbol": "CRDL",
       "currency": "USD",
       "latestDate": "2026-10-15",
-      "latestClose": 1.145,
+      "latestClose": 1.15,
       "previousClose": 1.14,
-      "change": 0.005,
-      "changePercent": 0.44,
-      "volume": 215126,
+      "change": 0.01,
+      "changePercent": 0.88,
+      "volume": 570499,
       "high20": 1.98,
       "low20": 1.125,
-      "sma20": 1.4995,
-      "sma50": 1.7381,
-      "rsi14": 21.5,
-      "avgVolume20": 1633661,
+      "sma20": 1.4998,
+      "sma50": 1.7382,
+      "rsi14": 22.08,
+      "avgVolume20": 1651430,
       "quality": {
         "score": 100.0,
-        "rows": 128,
+        "rows": 127,
         "nullCells": 0,
         "duplicateDatesRemoved": 0,
         "invalidOhlcRows": 0,
@@ -1341,10 +1341,10 @@
         {
           "date": "2026-10-15",
           "open": 1.16,
-          "high": 1.16,
+          "high": 1.17,
           "low": 1.125,
-          "close": 1.145,
-          "volume": 215126
+          "close": 1.15,
+          "volume": 570499
         }
       ]
     },
@@ -1352,20 +1352,20 @@
       "symbol": "ADMA",
       "currency": "USD",
       "latestDate": "2026-10-15",
-      "latestClose": 10.79,
+      "latestClose": 10.73,
       "previousClose": 10.34,
-      "change": 0.45,
-      "changePercent": 4.35,
-      "volume": 1043628,
+      "change": 0.39,
+      "changePercent": 3.77,
+      "volume": 2766292,
       "high20": 10.905,
       "low20": 8.81,
-      "sma20": 9.9763,
-      "sma50": 9.6938,
-      "rsi14": 67.8,
-      "avgVolume20": 3346996,
+      "sma20": 9.9733,
+      "sma50": 9.6926,
+      "rsi14": 67.05,
+      "avgVolume20": 3433130,
       "quality": {
         "score": 100.0,
-        "rows": 128,
+        "rows": 127,
         "nullCells": 0,
         "duplicateDatesRemoved": 0,
         "invalidOhlcRows": 0,
@@ -1611,8 +1611,8 @@
           "open": 10.6,
           "high": 10.905,
           "low": 10.49,
-          "close": 10.79,
-          "volume": 1043628
+          "close": 10.73,
+          "volume": 2766292
         }
       ]
     },
@@ -1620,20 +1620,20 @@
       "symbol": "AMPL",
       "currency": "USD",
       "latestDate": "2026-10-15",
-      "latestClose": 15.845,
+      "latestClose": 15.83,
       "previousClose": 15.29,
-      "change": 0.555,
-      "changePercent": 3.63,
-      "volume": 348852,
+      "change": 0.54,
+      "changePercent": 3.53,
+      "volume": 1289273,
       "high20": 16.175,
       "low20": 12.66,
-      "sma20": 14.3895,
-      "sma50": 13.5502,
-      "rsi14": 69.75,
-      "avgVolume20": 1735658,
+      "sma20": 14.3888,
+      "sma50": 13.5499,
+      "rsi14": 69.64,
+      "avgVolume20": 1782679,
       "quality": {
         "score": 100.0,
-        "rows": 128,
+        "rows": 127,
         "nullCells": 0,
         "duplicateDatesRemoved": 0,
         "invalidOhlcRows": 0,
@@ -1879,8 +1879,8 @@
           "open": 15.25,
           "high": 15.93,
           "low": 15.2094,
-          "close": 15.845,
-          "volume": 348852
+          "close": 15.83,
+          "volume": 1289273
         }
       ]
     }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-22T21:30:14.669310+00:00",
+  "generatedAt": "2026-10-23T04:41:23.917045+00:00",
   "source": {
     "name": "yfinance",
     "version": "1.5.1",
@@ -16,13 +16,13 @@
       "previousClose": 343.99,
       "change": 4.23,
       "changePercent": 1.23,
-      "volume": 46659852,
+      "volume": 46718600,
       "high20": 348.36,
       "low20": 325.81,
       "sma20": 338.573,
       "sma50": 328.6174,
       "rsi14": 64.75,
-      "avgVolume20": 38022198,
+      "avgVolume20": 38025135,
       "quality": {
         "score": 100.0,
         "rows": 127,
@@ -31,7 +31,7 @@
         "invalidOhlcRows": 0,
         "nonpositiveCloseRows": 0,
         "negativeVolumeRows": 0,
-        "staleDays": 0
+        "staleDays": 1
       },
       "sessions": [
         {
@@ -268,11 +268,11 @@
         },
         {
           "date": "2026-10-22",
-          "open": 344.935,
+          "open": 344.94,
           "high": 348.36,
           "low": 342.28,
           "close": 348.22,
-          "volume": 46659852
+          "volume": 46718600
         }
       ]
     },
@@ -284,13 +284,13 @@
       "previousClose": 532.95,
       "change": -11.87,
       "changePercent": -2.23,
-      "volume": 21072346,
+      "volume": 21104500,
       "high20": 551.15,
       "low20": 497.25,
       "sma20": 526.285,
       "sma50": 507.875,
       "rsi14": 50.51,
-      "avgVolume20": 21412127,
+      "avgVolume20": 21413735,
       "quality": {
         "score": 100.0,
         "rows": 127,
@@ -299,7 +299,7 @@
         "invalidOhlcRows": 0,
         "nonpositiveCloseRows": 0,
         "negativeVolumeRows": 0,
-        "staleDays": 0
+        "staleDays": 1
       },
       "sessions": [
         {
@@ -536,11 +536,11 @@
         },
         {
           "date": "2026-10-22",
-          "open": 532.7,
-          "high": 533.596,
+          "open": 533.14,
+          "high": 533.6,
           "low": 520.3,
           "close": 521.08,
-          "volume": 21072346
+          "volume": 21104500
         }
       ]
     },
@@ -552,13 +552,13 @@
       "previousClose": 773.09,
       "change": -9.13,
       "changePercent": -1.18,
-      "volume": 53695386,
+      "volume": 54035400,
       "high20": 781.62,
       "low20": 758.79,
       "sma20": 770.7195,
       "sma50": 768.1666,
       "rsi14": 45.18,
-      "avgVolume20": 40731334,
+      "avgVolume20": 40748335,
       "quality": {
         "score": 100.0,
         "rows": 127,
@@ -567,7 +567,7 @@
         "invalidOhlcRows": 0,
         "nonpositiveCloseRows": 0,
         "negativeVolumeRows": 0,
-        "staleDays": 0
+        "staleDays": 1
       },
       "sessions": [
         {
@@ -808,7 +808,7 @@
           "high": 767.71,
           "low": 761.17,
           "close": 763.96,
-          "volume": 53695386
+          "volume": 54035400
         }
       ]
     },
@@ -820,13 +820,13 @@
       "previousClose": 1.41,
       "change": -0.03,
       "changePercent": -2.13,
-      "volume": 45052786,
+      "volume": 45119000,
       "high20": 2.04,
       "low20": 1.34,
       "sma20": 1.674,
       "sma50": 1.9626,
       "rsi14": 23.74,
-      "avgVolume20": 51505504,
+      "avgVolume20": 51508815,
       "quality": {
         "score": 100.0,
         "rows": 127,
@@ -835,7 +835,7 @@
         "invalidOhlcRows": 0,
         "nonpositiveCloseRows": 0,
         "negativeVolumeRows": 0,
-        "staleDays": 0
+        "staleDays": 1
       },
       "sessions": [
         {
@@ -1072,11 +1072,11 @@
         },
         {
           "date": "2026-10-22",
-          "open": 1.37,
+          "open": 1.38,
           "high": 1.42,
           "low": 1.34,
           "close": 1.38,
-          "volume": 45052786
+          "volume": 45119000
         }
       ]
     },
@@ -1088,13 +1088,13 @@
       "previousClose": 1.17,
       "change": -0.02,
       "changePercent": -1.71,
-      "volume": 443337,
+      "volume": 449500,
       "high20": 1.75,
       "low20": 1.08,
       "sma20": 1.327,
       "sma50": 1.7062,
       "rsi14": 28.03,
-      "avgVolume20": 1509087,
+      "avgVolume20": 1509395,
       "quality": {
         "score": 100.0,
         "rows": 127,
@@ -1103,7 +1103,7 @@
         "invalidOhlcRows": 0,
         "nonpositiveCloseRows": 0,
         "negativeVolumeRows": 0,
-        "staleDays": 0
+        "staleDays": 1
       },
       "sessions": [
         {
@@ -1344,7 +1344,7 @@
           "high": 1.19,
           "low": 1.15,
           "close": 1.15,
-          "volume": 443337
+          "volume": 449500
         }
       ]
     },
@@ -1356,13 +1356,13 @@
       "previousClose": 11.01,
       "change": -0.06,
       "changePercent": -0.54,
-      "volume": 3551544,
+      "volume": 3551500,
       "high20": 11.325,
       "low20": 9.23,
       "sma20": 10.338,
       "sma50": 9.8035,
       "rsi14": 64.91,
-      "avgVolume20": 3044272,
+      "avgVolume20": 3044270,
       "quality": {
         "score": 100.0,
         "rows": 127,
@@ -1371,7 +1371,7 @@
         "invalidOhlcRows": 0,
         "nonpositiveCloseRows": 0,
         "negativeVolumeRows": 0,
-        "staleDays": 0
+        "staleDays": 1
       },
       "sessions": [
         {
@@ -1609,10 +1609,10 @@
         {
           "date": "2026-10-22",
           "open": 11.01,
-          "high": 11.1,
+          "high": 11.105,
           "low": 10.8,
           "close": 10.95,
-          "volume": 3551544
+          "volume": 3551500
         }
       ]
     },
@@ -1624,13 +1624,13 @@
       "previousClose": 16.52,
       "change": 0.55,
       "changePercent": 3.33,
-      "volume": 1896812,
+      "volume": 1896900,
       "high20": 17.105,
       "low20": 12.66,
       "sma20": 14.989,
       "sma50": 13.9485,
       "rsi14": 71.01,
-      "avgVolume20": 1792931,
+      "avgVolume20": 1792935,
       "quality": {
         "score": 100.0,
         "rows": 127,
@@ -1639,7 +1639,7 @@
         "invalidOhlcRows": 0,
         "nonpositiveCloseRows": 0,
         "negativeVolumeRows": 0,
-        "staleDays": 0
+        "staleDays": 1
       },
       "sessions": [
         {
@@ -1880,7 +1880,7 @@
           "high": 17.105,
           "low": 16.35,
           "close": 17.07,
-          "volume": 1896812
+          "volume": 1896900
         }
       ]
     }
